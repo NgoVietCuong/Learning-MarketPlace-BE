@@ -1,0 +1,33 @@
+services: 
+  node:
+    build: .
+    container_name: hlm_node
+    tty: true
+    volumes:
+      - ./:/work
+      - /work/node_modules
+    ports:
+      - 46501:${APP_PORT}
+    depends_on:
+      - db
+      - redis
+  db:
+    image: postgres:16.2
+    container_name: hlm_db
+    tty: true
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - ./docker/postgres-data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - 46502:5432
+  redis:
+    image: redis:7.2.4
+    container_name: hlm_redis
+    restart: always
+    ports:
+      - 46503:6379
+
