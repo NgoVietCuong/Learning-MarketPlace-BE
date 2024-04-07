@@ -37,3 +37,4 @@ lerna-debug.log*
 # ENV file
 .env
 package-lock.json
+docker/
