@@ -15,7 +15,6 @@ const authUserProvider = {
       if (!payload) return null;
       return payload.id || null;
     } catch (e) {
-      console.log('error', e)
       return null;
     }
   },

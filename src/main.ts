@@ -19,6 +19,7 @@ async function bootstrap() {
     .setTitle(`${process.env.APP_NAME} Swagger`)
     .setDescription('HLM API Description')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
