@@ -1,5 +1,5 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { Public } from 'src/app/decorators/public';
 import { AllowAccess } from 'src/app/decorators/allow-access';
@@ -75,6 +75,7 @@ export class AuthController {
     return this.authService.refreshToken(body);
   }
 
+  @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @AllowAccess()
   @ApiOperation({ summary: 'Logout'})
