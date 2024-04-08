@@ -1,7 +1,7 @@
 services: 
   node:
     build: .
-    container_name: hlm_node
+    container_name: hlm_be_node
     tty: true
     volumes:
       - ./:/work
