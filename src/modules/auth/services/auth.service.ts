@@ -113,6 +113,7 @@ export class AuthService extends BaseService {
     if (!user) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'User' } }));
     if (!user.emailVerified) throw new UnauthorizedException(this.trans.t('messages.EMAIL_NOT_VERIFIED'));
     if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+    if (!user.password) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const matchPassword = await bcrypt.compare(password, user.password);
     if (!matchPassword)
@@ -202,6 +203,11 @@ export class AuthService extends BaseService {
     if (!verifyCode) throw new BadRequestException(this.trans.t('messages.VERIFY_CODE_EXPIRED'));
     if (verifyCode && code !== verifyCode) throw new BadRequestException(this.trans.t('messages.VERIFY_CODE_INVALID'));
 
+    if (user.password) {
+      const matchPassword = await bcrypt.compare(password, user.password);
+      if (matchPassword) throw new BadRequestException(this.trans.t('messages.SAME_PASSWORD'));
+    }
+
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(password, salt);
     await this.userService.update(user.id, { password: hashedPassword });
@@ -213,13 +219,16 @@ export class AuthService extends BaseService {
     try {
       const refreshPayload = this.jwtService.verify(refreshToken);
       const { id, email } = refreshPayload;
-      
+
       const cacheRefreshToken = await this.cacheManager.get(`refresh_token_${id}`);
       if (!cacheRefreshToken) throw new UnauthorizedException(this.trans.t('messages.REFRESH_TOKEN_EXPIRED'));
       if (refreshToken !== cacheRefreshToken)
         throw new UnauthorizedException(this.trans.t('messages.REFRESH_TOKEN_INVALID'));
 
-      const accessPayload = { id, email };
+      const user = await this.userService.findOne(email);
+      if (!user) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'User' } }));
+
+      const accessPayload = { id, email, roles: user.roles };
       const accessToken = this.jwtService.sign(accessPayload, { expiresIn: constants.ACCESS_TOKEN.EXPIRES_IN });
       return this.responseOk({ accessToken });
     } catch (e) {

@@ -16,6 +16,9 @@ stop:
 # Go to node container terminal
 node:
 	docker compose exec node sh
+# Go to redis container terminal
+redis:
+	docker compose exec redis sh
 # Install all dependencies in node container
 install:
 	docker compose exec node yarn install

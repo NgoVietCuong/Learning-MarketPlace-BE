@@ -18,7 +18,7 @@
   "VERIFY_CODE_EXPIRED": "Your email verification link is expired. Please request a new one.",
   "VERIFY_CODE_INVALID": "Verification code is invalid.",
   "CONFIRMATION_CODE_EXPIRED": "Code has expired.",
-  "SAME_PASSWORD": "Old and new passwords must be different.",
+  "SAME_PASSWORD": "Old and new password must be different.",
   "EMAIL_NOT_VERIFIED": "Email not verified.",
   "REFRESH_TOKEN_INVALID": "Refresh token is invalid.",
   "REFRESH_TOKEN_EXPIRED": "Refresh token is expired."
