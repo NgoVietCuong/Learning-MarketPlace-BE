@@ -1,6 +1,7 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleGuard } from 'src/app/guards/role.guard';
+import { User } from 'src/app/decorators/user';
 import { Public } from 'src/app/decorators/public';
 import { AllowAccess } from 'src/app/decorators/allow-access';
 import { AuthService } from './services/auth.service';
@@ -13,7 +14,6 @@ import { SendResetEmailDto } from './dto/send-reset-email.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { ResendVerifyEmailDto } from './dto/resend-verify-email.dto';
 import { VerifyResetPasswordDto } from './dto/verify-reset-password.dto';
-
 
 @Public()
 @ApiTags('Authentication')
@@ -69,7 +69,7 @@ export class AuthController {
     return this.authService.updatePassword(body);
   }
 
-  @ApiOperation({ summary: 'Get new access token'})
+  @ApiOperation({ summary: 'Get new access token' })
   @Post('refresh-token')
   async refreshToken(@Body() body: RefreshTokenDto) {
     return this.authService.refreshToken(body);
@@ -78,9 +78,9 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(RoleGuard)
   @AllowAccess()
-  @ApiOperation({ summary: 'Logout'})
+  @ApiOperation({ summary: 'Logout' })
   @Post('logout')
-  async logout() {
-    return this.authService.logout();
+  async logout(@User('id') id: number) {
+    return this.authService.logout(id);
   }
 }
