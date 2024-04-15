@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -20,8 +20,12 @@ export class UserService extends BaseService {
   async changePassword(body: ChangePasswordDto, userId: number) {
     const { currentPassword, newPassword } = body;
     const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+    if (!user.password) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
+
     const matchPassword = await bcrypt.compare(currentPassword, user.password);
     if (!matchPassword) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
+
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     await this.userRepo.update({ id: userId }, { password: hashedPassword });
@@ -30,6 +34,8 @@ export class UserService extends BaseService {
 
   async changeAvatar(body: ChangeAvatarDto, userId: number) {
     const { avatar } = body;
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
     await this.userRepo.update({ id: userId }, { avatar });
     return this.responseOk();
   }
