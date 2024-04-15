@@ -1,10 +1,22 @@
-import { registerDecorator, ValidationOptions, ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface, ValidateIf } from 'class-validator';
+import {
+  registerDecorator,
+  ValidationOptions,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+  ValidateIf,
+} from 'class-validator';
 import dayjs, { UnitType } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { AppDataSource } from '../../../ormconfig';
 import { constants } from '../constants/common.constant';
 
-export function DateAfter(targetDate: string = null, granularity: UnitType, setEqual = false, validationOptions?: ValidationOptions) {
+export function DateAfter(
+  targetDate: string = null,
+  granularity: UnitType,
+  setEqual = false,
+  validationOptions?: ValidationOptions,
+) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       name: 'DateAfter',
@@ -39,7 +51,7 @@ export function DateAfter(targetDate: string = null, granularity: UnitType, setE
             }
             return `The value of field '$property' must be greater than this ${granularity}.`;
           }
-        }
+        },
       },
     });
   };
@@ -72,7 +84,7 @@ export function IsTextAndNumber(allowNumber: boolean, validationOptions?: Valida
           }
 
           return `The value of field '$property' must be text only.`;
-        }
+        },
       },
     });
   };
@@ -88,12 +100,11 @@ export function IsDateFormat(format: string, validationOptions?: ValidationOptio
       options: validationOptions,
       validator: {
         validate(value: any) {
-
-        return dayjs(value, format).format(format) == value;
+          return dayjs(value, format).format(format) == value;
         },
         defaultMessage() {
           return `The value of field '$property' must be valid date format ${format}`;
-        }
+        },
       },
     });
   };
@@ -116,7 +127,7 @@ export function GreaterThanOrEqualTo(targetField: string, validationOptions?: Va
         },
         defaultMessage() {
           return `The value of field '$property' must be greater than or equal to '${targetField}'`;
-        }
+        },
       },
     });
   };
@@ -142,7 +153,7 @@ export function StringMaxWords(max: number, validationOptions?: ValidationOption
         },
         defaultMessage() {
           return `$property must have less than or equal ${max} words.`;
-        }
+        },
       },
     });
   };
@@ -177,7 +188,7 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
             return `The $property must be between ${constants.PASSWORD.MIN_LENGTH} and ${constants.PASSWORD.MAX_LENGTH} characters`;
           }
           return `The $property include uppercase letters, lowercase letters, numbers, and special characters.`;
-        }
+        },
       },
     });
   };
@@ -186,6 +197,30 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
 export function RequiredIf(requiredCondition: (obj: any, value: any) => boolean, options?: ValidationOptions) {
   // Validate with condition
   return ValidateIf((obj, value) => requiredCondition(obj, value) || (!value && value !== undefined), options);
+}
+
+export function IsDifferentFrom(property: string, validationOptions?: ValidationOptions) {
+  return (object: any, propertyName: string) => {
+    registerDecorator({
+      name: 'isEqualTo',
+      target: object.constructor,
+      propertyName,
+      constraints: [property],
+      options: validationOptions,
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const [relatedPropertyName] = args.constraints;
+          const relatedValue = (args.object as any)[relatedPropertyName];
+          return value !== relatedValue;
+        },
+
+        defaultMessage(args: ValidationArguments) {
+          const [relatedPropertyName] = args.constraints;
+          return `${propertyName} must be different from ${relatedPropertyName}`;
+        },
+      },
+    });
+  };
 }
 
 @ValidatorConstraint({ name: 'Unique', async: false })
@@ -203,9 +238,11 @@ export class Unique implements ValidatorConstraintInterface {
     }
     const queryBuilder = AppDataSource.getRepository(entity).createQueryBuilder();
     if (onlyLowerCase) {
-      queryBuilder.where(`LOWER(REPLACE(${uniqueColumnName}, ' ', '')) = LOWER(REPLACE(:value, ' ', ''))`, {value: value});
+      queryBuilder.where(`LOWER(REPLACE(${uniqueColumnName}, ' ', '')) = LOWER(REPLACE(:value, ' ', ''))`, {
+        value: value,
+      });
     } else {
-      queryBuilder.where(`${uniqueColumnName} = :value`, {value: value.trim()});
+      queryBuilder.where(`${uniqueColumnName} = :value`, { value: value.trim() });
     }
     const exist = await queryBuilder.getOne();
 
@@ -227,8 +264,9 @@ export class Exist implements ValidatorConstraintInterface {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
     }
-    const queryBuilder = AppDataSource.getRepository(entity).createQueryBuilder()
-      .where(`${targetColumnName} = :value`, {value: value});
+    const queryBuilder = AppDataSource.getRepository(entity)
+      .createQueryBuilder()
+      .where(`${targetColumnName} = :value`, { value: value });
     if (withDeleted) {
       queryBuilder.withDeleted();
     }

@@ -21,9 +21,6 @@ export const constants = {
     SIZE: 500 * 1024 * 1024,
     TYPE: /\.(docx|doc|odt|rdt|rtf|epub|pptx|ppt|txt|odp|xlsx|csv|tsv|ods|xlsm|xlsb|xltx|png|jpg|pdf|jpeg|webp|svg|gif|avif|apng)$/,
   },
-  INJECT_TOKEN: {
-    AUTH_USER: 'AUTH_USER',
-  },
   RESET_PASSWORD_CODE: {
     LENGTH: 6,
     TTL: 600, // 10 minutes
