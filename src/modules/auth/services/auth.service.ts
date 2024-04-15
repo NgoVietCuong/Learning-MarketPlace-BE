@@ -43,7 +43,6 @@ export class AuthService extends BaseService {
     private readonly trans: I18nService,
     @InjectRepository(Role) private roleRepo: Repository<Role>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    @Inject(constants.INJECT_TOKEN.AUTH_USER) private readonly currentUserId,
   ) {
     super();
   }
@@ -237,8 +236,8 @@ export class AuthService extends BaseService {
     }
   }
 
-  async logout() {
-    await this.cacheManager.del(`refresh_token_${this.currentUserId}`);
+  async logout(userId: number) {
+    await this.cacheManager.del(`refresh_token_${userId}`);
     return this.responseOk();
   }
 

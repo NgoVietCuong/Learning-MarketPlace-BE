@@ -10,7 +10,6 @@ import { AuthService } from './services/auth.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { Role } from 'src/entities/role.entity';
-import { AuthUserModule } from './auth-user/auth-user.module';
 import jwtConfiguration from 'src/config/jwt.config';
 import googleConfiguration from 'src/config/google.config';
 
@@ -31,7 +30,6 @@ import googleConfiguration from 'src/config/google.config';
     }),
     MailModule,
     UserModule,
-    AuthUserModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleAuthService, JwtStrategy],
