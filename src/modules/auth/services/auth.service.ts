@@ -116,7 +116,7 @@ export class AuthService extends BaseService {
 
     const matchPassword = await bcrypt.compare(password, user.password);
     if (!matchPassword)
-      throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT', { args: { object: 'User' } }));
+      throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const accessPayload = { id: user.id, email: user.email, roles: user.roles };
     const refreshPayload = { id: user.id, email: user.email };
