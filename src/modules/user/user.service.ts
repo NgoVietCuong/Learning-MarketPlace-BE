@@ -17,6 +17,11 @@ export class UserService extends BaseService {
     super();
   }
 
+  async getUser(userId: number) {
+    const user = await this.userRepo.findOneBy({ id: userId, emailVerified: true, isActive: true });
+    return this.responseOk(user);
+  }
+
   async changePassword(body: ChangePasswordDto, userId: number) {
     const { currentPassword, newPassword } = body;
     const user = await this.userRepo.findOneBy({ id: userId });

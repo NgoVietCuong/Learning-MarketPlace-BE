@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Get, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { User } from 'src/app/decorators/user';
@@ -15,6 +15,13 @@ import { Roles } from 'src/app/enums/common.enum';
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
+
+  @ApiOperation({ summary: 'Get user'})
+  @Get()
+  async getUser(@User('id') id: number) {
+    return this.userService.getUser(id);
+  }
+
   @ApiOperation({ summary: 'Change password' })
   @Patch('change-password')
   async changePassword(@Body() body: ChangePasswordDto, @User('id') id: number) {
