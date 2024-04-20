@@ -11,6 +11,8 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - hlm_network
   db:
     image: postgres:16.2
     container_name: hlm_db
@@ -24,10 +26,17 @@ services:
     restart: always
     ports:
       - 46502:5432
+    networks:
+      - hlm_network
   redis:
     image: redis:7.2.4
     container_name: hlm_redis
     restart: always
     ports:
       - 46503:6379
+    networks:
+      - hlm_network
 
+networks:
+  hlm_network:
+    external: true
