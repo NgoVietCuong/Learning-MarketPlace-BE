@@ -1,10 +1,13 @@
-import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
 import { User } from 'src/entities/user.entity';
+import { Role } from 'src/entities/role.entity';
+import { InstructorProfile } from 'src/entities/instructor-profile.entity';
+import { Roles } from 'src/app/enums/common.enum';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeAvatarDto } from './dto/change-avatar.dto';
 
@@ -12,7 +15,9 @@ import { ChangeAvatarDto } from './dto/change-avatar.dto';
 export class UserService extends BaseService {
   constructor(
     private readonly trans: I18nService,
+    @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(InstructorProfile) private readonly instructorProfileRepo: Repository<InstructorProfile>,
   ) {
     super();
   }
@@ -42,6 +47,22 @@ export class UserService extends BaseService {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
     await this.userRepo.update({ id: userId }, { avatar });
+    return this.responseOk();
+  }
+
+  async becomeInstructor(userId: number) {
+    const user = await this.userRepo.findOne({ where: { id: userId }, relations: ['roles'] });
+    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+
+    const instructorRole = await this.roleRepo.findOneBy({ code: Roles.INSTRUCTOR });
+    if (!instructorRole) throw new BadRequestException('Role not found');
+
+    const isIntructor = user.roles.find((role) => role.code === Roles.INSTRUCTOR);
+    if (!isIntructor) {
+      user.roles.push(instructorRole);
+      await this.userRepo.save(user);
+      await this.instructorProfileRepo.save({ userId });
+    }
     return this.responseOk();
   }
 

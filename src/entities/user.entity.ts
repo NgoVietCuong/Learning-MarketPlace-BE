@@ -4,11 +4,12 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany,
+  OneToOne,
   ManyToMany,
   JoinTable,
 } from 'typeorm';
 import { Role } from './role.entity';
+import { InstructorProfile } from './instructor-profile.entity';
 
 @Entity('users')
 export class User {
@@ -39,17 +40,20 @@ export class User {
   @UpdateDateColumn()
   updatedAt: string;
 
+  @OneToOne(() => InstructorProfile, (profile) => profile.user)
+  profile: InstructorProfile;
+
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_role',
     joinColumn: {
       name: 'user_id',
-      referencedColumnName: 'id'
+      referencedColumnName: 'id',
     },
     inverseJoinColumn: {
       name: 'role_id',
-      referencedColumnName: 'id'
-    }
+      referencedColumnName: 'id',
+    },
   })
   roles: Role[];
 }
