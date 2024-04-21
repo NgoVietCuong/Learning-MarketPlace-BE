@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Get, UseGuards, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { User } from 'src/app/decorators/user';
@@ -32,5 +32,12 @@ export class UserController {
   @Patch('change-avatar')
   async changeAvatar(@Body() body: ChangeAvatarDto, @User('id') id: number) {
     return this.userService.changeAvatar(body, id);
+  }
+
+  @AllowAccess(Roles.STUDENT)
+  @ApiOperation({ summary: 'Become instructor' })
+  @Post('become-instructor')
+  async becomeInstructor(@User('id') id: number) {
+    return this.userService.becomeInstructor(id);
   }
 }
