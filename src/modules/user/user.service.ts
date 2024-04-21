@@ -66,6 +66,14 @@ export class UserService extends BaseService {
     return this.responseOk();
   }
 
+  async getInstructorProfile(userId: number) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+
+    const instructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
+    return this.responseOk(instructorProfile);
+  }
+
   async create(data) {
     return await this.userRepo.save(data);
   }
