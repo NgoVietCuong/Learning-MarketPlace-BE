@@ -80,15 +80,8 @@ export class UserService extends BaseService {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
 
-    const { displayName, introduction, biography, twitterLink, linkedinLink, youtubeLink } = body;
     const instructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
-    instructorProfile.displayName = displayName;
-    instructorProfile.introduction = introduction;
-    instructorProfile.biography = biography;
-    instructorProfile.twitterLink = twitterLink;
-    instructorProfile.linkedinLink = linkedinLink;
-    instructorProfile.youtubeLink = youtubeLink;
-    await this.instructorProfileRepo.save(instructorProfile);
+    await this.instructorProfileRepo.save({...instructorProfile, ...body})
 
     return this.responseOk();
   }
