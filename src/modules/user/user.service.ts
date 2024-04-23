@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
@@ -10,6 +10,8 @@ import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { Roles } from 'src/app/enums/common.enum';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeAvatarDto } from './dto/change-avatar.dto';
+import { ChangeInstructorProfileDto } from './dto/change-instructor-profile.dto';
+import { ChangeInstructorPictureDto } from './dto/change-instructor-picture.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -72,6 +74,24 @@ export class UserService extends BaseService {
 
     const instructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
     return this.responseOk(instructorProfile);
+  }
+
+  async changeInstructorProfile(body: ChangeInstructorProfileDto, userId: number) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+
+    const slug = await this.generateSlug(body.displayName, this.instructorProfileRepo, 'slug');
+    await this.instructorProfileRepo.update({ userId }, { ...body, slug });
+    return this.responseOk();
+  }
+
+  async changeInstructorPicture(body: ChangeInstructorPictureDto, userId: number) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+
+    const { picture } = body;
+    await this.instructorProfileRepo.update({ userId }, { picture });
+    return this.responseOk();
   }
 
   async create(data) {

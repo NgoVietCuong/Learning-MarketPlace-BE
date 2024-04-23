@@ -1,10 +1,12 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AllowAccess } from 'src/app/decorators/allow-access';
 import { Roles } from 'src/app/enums/common.enum';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { UserService } from '../user.service';
 import { User } from 'src/app/decorators/user';
+import { ChangeInstructorProfileDto } from '../dto/change-instructor-profile.dto';
+import { ChangeInstructorPictureDto } from '../dto/change-instructor-picture.dto';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
@@ -18,5 +20,17 @@ export class InstructorController {
   @Get('profile')
   async getInstructorProfile(@User('id') id: number) {
     return this.userService.getInstructorProfile(id);
+  }
+
+  @ApiOperation({ summary: 'Change intructor profile' })
+  @Patch('profile/change-information')
+  async changeInstructorProfile(@Body() body:ChangeInstructorProfileDto, @User('id') id: number) {
+    return this.userService.changeInstructorProfile(body, id);
+  }
+
+  @ApiOperation({ summary: 'Change intructor picture' })
+  @Patch('profile/change-picture')
+  async changeInstructorPicture(@Body() body:ChangeInstructorPictureDto, @User('id') id: number) {
+    return this.userService.changeInstructorPicture(body, id);
   }
 }

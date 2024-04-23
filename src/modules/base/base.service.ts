@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpException } from '@nestjs/common';
 import { SelectQueryBuilder } from 'typeorm';
 import dayjs from 'dayjs';
+import slugify from 'slugify';
 import { constants } from 'src/app/constants/common.constant';
 
 @Injectable()
@@ -73,5 +74,25 @@ export class BaseService {
         currentPage: page,
       },
     };
+  }
+
+  async generateSlug(
+    string: string,
+    repository: any,
+    column: string,
+    options: { replacement: string; remove: RegExp; lower: boolean; strict: boolean; locale: string; trim: boolean } = {
+      replacement: '-',
+      remove: undefined,
+      lower: true,
+      strict: true,
+      locale: 'v',
+      trim: true,
+    },
+  ) {
+    let slug = slugify(string, options);
+    const result = await repository.createQueryBuilder('table').where(`table.${column} = :column`, { column }).getOne();
+
+    if (result) slug += `${options.replacement}${Date.now()}`;
+    return slug;
   }
 }
