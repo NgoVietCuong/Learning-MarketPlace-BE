@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
@@ -80,9 +80,8 @@ export class UserService extends BaseService {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
 
-    const instructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
-    await this.instructorProfileRepo.save({...instructorProfile, ...body})
-
+    const slug = await this.generateSlug(body.displayName, this.instructorProfileRepo, 'slug');
+    await this.instructorProfileRepo.update({ userId }, { ...body, slug });
     return this.responseOk();
   }
 
@@ -92,7 +91,6 @@ export class UserService extends BaseService {
 
     const { picture } = body;
     await this.instructorProfileRepo.update({ userId }, { picture });
-
     return this.responseOk();
   }
 
