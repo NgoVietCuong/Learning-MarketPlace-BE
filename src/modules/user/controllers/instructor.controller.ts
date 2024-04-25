@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/app/decorators/public';
 import { AllowAccess } from 'src/app/decorators/allow-access';
 import { Roles } from 'src/app/enums/common.enum';
 import { RoleGuard } from 'src/app/guards/role.guard';
@@ -32,5 +33,12 @@ export class InstructorController {
   @Patch('profile/change-picture')
   async changeInstructorPicture(@Body() body:ChangeInstructorPictureDto, @User('id') id: number) {
     return this.userService.changeInstructorPicture(body, id);
+  }
+  
+  @Public()
+  @ApiOperation({ summary: 'Get public instructor information' })
+  @Get('profile/:slug')
+  async getInstructorInfo( @Param('slug') slug: string) {
+    return this.userService.getInstructorInfo(slug);
   }
 }
