@@ -85,6 +85,16 @@ export class UserService extends BaseService {
     return this.responseOk();
   }
 
+  async getInstructorInfo(slug: string) {
+    const profile = await this.instructorProfileRepo
+      .createQueryBuilder('IP')
+      .innerJoin('IP.user', 'U')
+      .where('IP.slug = :slug', { slug })
+      .andWhere('U.isActive = :isActive', { isActive: true })
+      .getOne();
+    return this.responseOk(profile);
+  }
+
   async changeInstructorPicture(body: ChangeInstructorPictureDto, userId: number) {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
