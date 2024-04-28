@@ -32,7 +32,6 @@ export class UserService extends BaseService {
   async changePassword(body: ChangePasswordDto, userId: number) {
     const { currentPassword, newPassword } = body;
     const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
     if (!user.password) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const matchPassword = await bcrypt.compare(currentPassword, user.password);
@@ -46,16 +45,12 @@ export class UserService extends BaseService {
 
   async changeAvatar(body: ChangeAvatarDto, userId: number) {
     const { avatar } = body;
-    const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
     await this.userRepo.update({ id: userId }, { avatar });
     return this.responseOk();
   }
 
   async becomeInstructor(userId: number) {
     const user = await this.userRepo.findOne({ where: { id: userId }, relations: ['roles'] });
-    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
-
     const instructorRole = await this.roleRepo.findOneBy({ code: Roles.INSTRUCTOR });
     if (!instructorRole) throw new BadRequestException('Role not found');
 
@@ -69,19 +64,19 @@ export class UserService extends BaseService {
   }
 
   async getInstructorProfile(userId: number) {
-    const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
-
     const instructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
     return this.responseOk(instructorProfile);
   }
 
   async changeInstructorProfile(body: ChangeInstructorProfileDto, userId: number) {
-    const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
-
     const slug = await this.generateSlug(body.displayName, this.instructorProfileRepo, 'slug');
     await this.instructorProfileRepo.update({ userId }, { ...body, slug });
+    return this.responseOk();
+  }
+
+  async changeInstructorPicture(body: ChangeInstructorPictureDto, userId: number) {
+    const { picture } = body;
+    await this.instructorProfileRepo.update({ userId }, { picture });
     return this.responseOk();
   }
 
@@ -93,15 +88,6 @@ export class UserService extends BaseService {
       .andWhere('U.isActive = :isActive', { isActive: true })
       .getOne();
     return this.responseOk(profile);
-  }
-
-  async changeInstructorPicture(body: ChangeInstructorPictureDto, userId: number) {
-    const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
-
-    const { picture } = body;
-    await this.instructorProfileRepo.update({ userId }, { picture });
-    return this.responseOk();
   }
 
   async create(data) {
