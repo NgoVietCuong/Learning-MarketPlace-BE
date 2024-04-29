@@ -115,8 +115,7 @@ export class AuthService extends BaseService {
     if (!user.password) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const matchPassword = await bcrypt.compare(password, user.password);
-    if (!matchPassword)
-      throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
+    if (!matchPassword) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const accessPayload = { id: user.id, email: user.email, roles: user.roles };
     const refreshPayload = { id: user.id, email: user.email };
@@ -152,6 +151,8 @@ export class AuthService extends BaseService {
       user = await this.userService.create(userData);
     }
     if (user && !user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+    let avatar = user.avatar ? user.avatar : picture;
+    await this.userService.update(user.id, { avatar });
 
     const accessPayload = { id: user.id, email: user.email, roles: user.roles };
     const refreshPayload = { id: user.id, email: user.email };
