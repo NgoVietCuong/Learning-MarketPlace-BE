@@ -115,8 +115,7 @@ export class AuthService extends BaseService {
     if (!user.password) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const matchPassword = await bcrypt.compare(password, user.password);
-    if (!matchPassword)
-      throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
+    if (!matchPassword) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
     const accessPayload = { id: user.id, email: user.email, roles: user.roles };
     const refreshPayload = { id: user.id, email: user.email };
@@ -137,6 +136,8 @@ export class AuthService extends BaseService {
 
     const { name, email, email_verified, picture } = googlePayload;
     let user = await this.userService.findOne(email);
+    let avatar = user.avatar ? user.avatar : picture;
+    await this.userService.update(user.id, { avatar });
     if (!user) {
       const studentRole = await this.roleRepo.findOneBy({ code: Roles.STUDENT });
       if (!studentRole) throw new BadRequestException('Role not found');
