@@ -136,8 +136,6 @@ export class AuthService extends BaseService {
 
     const { name, email, email_verified, picture } = googlePayload;
     let user = await this.userService.findOne(email);
-    let avatar = user.avatar ? user.avatar : picture;
-    await this.userService.update(user.id, { avatar });
     if (!user) {
       const studentRole = await this.roleRepo.findOneBy({ code: Roles.STUDENT });
       if (!studentRole) throw new BadRequestException('Role not found');
@@ -153,6 +151,8 @@ export class AuthService extends BaseService {
       user = await this.userService.create(userData);
     }
     if (user && !user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
+    let avatar = user.avatar ? user.avatar : picture;
+    await this.userService.update(user.id, { avatar });
 
     const accessPayload = { id: user.id, email: user.email, roles: user.roles };
     const refreshPayload = { id: user.id, email: user.email };
