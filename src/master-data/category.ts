@@ -1,0 +1,86 @@
+export const categories = [
+  {
+    slug: 'development',
+    name: 'Development',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'business',
+    name: 'Business',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'finance-and-accounting',
+    name: 'Finance & Accounting ',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'it-and-software',
+    name: 'IT & Software',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'office-productivity',
+    name: 'Office Productivity',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'personal-development',
+    name: 'Personal Development',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'design',
+    name: 'Design',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'marketing',
+    name: 'Marketing',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'lifestyle',
+    name: 'Lifestyle',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'photography-and-video',
+    name: 'Photography & Video',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'health-and-fitness',
+    name: 'Health & Fitness',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'music',
+    name: 'Music',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'teaching-and-academics',
+    name: 'Teaching & Academics',
+    icon: '',
+    isActive: true,
+  },
+  {
+    slug: 'do-not-know',
+    name: `I don't know yet`,
+    icon: '',
+    isActive: true,
+  },
+];
