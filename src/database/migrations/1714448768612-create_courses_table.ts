@@ -29,7 +29,6 @@ export class CreateCoursesTable1714448768612 implements MigrationInterface {
             type: 'varchar(100)',
             isNullable: true,
           },
-
           {
             name: 'level',
             type: 'varchar',
@@ -58,8 +57,7 @@ export class CreateCoursesTable1714448768612 implements MigrationInterface {
           {
             name: 'is_published',
             type: 'boolean',
-            default: true,
-            isNullable: true,
+            default: false,
           },
           {
             name: 'price',

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Course } from 'src/entities/course.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { BaseService } from '../base/base.service';
 import { Category } from 'src/entities/category.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
@@ -16,11 +16,18 @@ export class CourseService extends BaseService {
   ) {
     super();
   }
+
   async createCourse(body: CreateCourseDto, userId: number) {
-    const { title, category } = body;
-    const intructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
-    const courseCategory = await this.categoryRepo.findOneBy({ name: category });
-    const course = await this.courseRepo.save({ title, categories: [courseCategory], profile: intructorProfile });
+    const { title, categoryIds } = body;
+    const instructorProfile = await this.instructorProfileRepo.findOneBy({ userId });
+    const courseCategories = await this.categoryRepo.findBy({ id: In(categoryIds) });
+    const slug = await this.generateSlug(title, this.courseRepo, 'slug');
+    const course = await this.courseRepo.save({
+      title,
+      slug,
+      categories: courseCategories,
+      instructorId: instructorProfile.id,
+    });
     return this.responseOk(course.id);
   }
 }

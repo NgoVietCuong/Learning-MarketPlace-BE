@@ -10,10 +10,11 @@ import { User } from 'src/app/decorators/user';
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
 @AllowAccess(Roles.INSTRUCTOR)
-@ApiTags('Course')
+@ApiTags('Instructor Course')
 @Controller('instructor-course')
 export class InstructorCourseController {
   constructor(private courseService: CourseService) {}
+
   @ApiOperation({ summary: 'Create course' })
   @Post('')
   async createCourse(@Body() body: CreateCourseDto, @User('id') id: number) {

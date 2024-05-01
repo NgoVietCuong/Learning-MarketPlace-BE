@@ -18,6 +18,9 @@ export class Course {
   id: number;
 
   @Column()
+  instructorId: number
+
+  @Column()
   title: string;
 
   @Column()
@@ -51,7 +54,7 @@ export class Course {
   updatedAt: string;
 
   @ManyToOne(() => InstructorProfile, (profile) => profile.courses)
-  @JoinColumn({ name: 'instructor_id' })
+  @JoinColumn({name: 'instructor_id'})
   profile: InstructorProfile;
 
   @ManyToMany(() => Category, (category) => category.courses)
