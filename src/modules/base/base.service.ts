@@ -90,7 +90,7 @@ export class BaseService {
     },
   ) {
     let slug = slugify(string, options);
-    const result = await repository.createQueryBuilder('table').where(`table.${column} = :column`, { column }).getOne();
+    const result = await repository.createQueryBuilder('table').where(`table.${column} = :slug`, { slug }).getOne();
 
     if (result) slug += `${options.replacement}${Date.now()}`;
     return slug;

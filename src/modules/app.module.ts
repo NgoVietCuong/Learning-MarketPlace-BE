@@ -12,6 +12,7 @@ import dataSourceDefaultOptions from 'ormconfig';
 import * as path from 'path';
 import * as redisStore from 'cache-manager-redis-store';
 import { JwtAuthGuard } from 'src/app/guards/jwt.guard';
+import { CourseModule } from './course/course.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { JwtAuthGuard } from 'src/app/guards/jwt.guard';
     AuthModule,
     MailModule,
     UserModule,
+    CourseModule,
   ],
   providers: [
     {

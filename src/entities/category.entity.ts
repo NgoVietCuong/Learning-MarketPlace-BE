@@ -1,5 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany } from 'typeorm';
+import { Course } from './course.entity';
 @Entity('categories')
 export class Category {
   @PrimaryGeneratedColumn('increment')
@@ -22,4 +22,7 @@ export class Category {
 
   @UpdateDateColumn()
   updatedAt: string;
+
+  @ManyToMany(() => Course, (course) => course.categories)
+  courses: Course[];
 }
