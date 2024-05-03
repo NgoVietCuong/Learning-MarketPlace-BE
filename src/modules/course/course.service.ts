@@ -30,4 +30,15 @@ export class CourseService extends BaseService {
     });
     return this.responseOk(course.id);
   }
+
+  async getCourseInfo(courseId: number, userId: number) {
+    const courseInfo = await this.courseRepo
+      .createQueryBuilder('C')
+      .innerJoin('C.profile', 'P')
+      .leftJoinAndSelect('C.categories', 'CTG')
+      .where('C.id = :id', { id: courseId })
+      .andWhere('P.userId = :userId', { userId })
+      .getOne();
+    return this.responseOk(courseInfo);
+  }
 }
