@@ -3,7 +3,6 @@ import { IsDifferentFrom } from 'src/app/decorators/custom-validator';
 
 export class ChangePasswordDto {
   @IsString()
-  @IsNotEmpty()
   currentPassword: string;
 
   @IsString()
