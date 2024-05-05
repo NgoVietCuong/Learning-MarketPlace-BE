@@ -6,6 +6,8 @@ import { Roles } from 'src/app/enums/common.enum';
 import { CreateCourseDto } from '../dto/create-course.dto';
 import { CourseService } from '../course.service';
 import { User } from 'src/app/decorators/user';
+import { UpdateCourseDto } from '../dto/update-course.dto';
+import { UpdatePublishCourseDto } from '../dto/update-publish.dto';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
@@ -20,7 +22,7 @@ export class InstructorCourseController {
   async createCourse(@Body() body: CreateCourseDto, @User('id') id: number) {
     return this.courseService.createCourse(body, id);
   }
-  
+
   @ApiOperation({ summary: 'Get course information' })
   @Get(':courseId')
   async getCourseInfo(@Param('courseId') courseId: number, @User('id') id: number) {
@@ -31,5 +33,17 @@ export class InstructorCourseController {
   @Delete(':courseId')
   async deleteCourse(@Param('courseId') courseId: number, @User('id') id: number) {
     return this.courseService.deleteCourse(courseId, id);
+  }
+
+  @ApiOperation({ summary: 'Update course' })
+  @Patch(':courseId')
+  async updateCourse(@Param('courseId') courseId: number, @User('id') id: number, @Body() body: UpdateCourseDto) {
+    return this.courseService.updateCourse(courseId, id, body);
+  }
+
+  @ApiOperation({ summary: 'Update publish course' })
+  @Patch(':courseId/publish')
+  async updatePublishCourse(@Param('courseId') courseId: number, @User('id') id: number, @Body() body: UpdatePublishCourseDto) {
+    return this.courseService.updatePublishCourse(courseId, id, body);
   }
 }
