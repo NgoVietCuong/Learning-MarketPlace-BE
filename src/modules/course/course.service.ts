@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Course } from 'src/entities/course.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,7 +28,7 @@ export class CourseService extends BaseService {
       categories: courseCategories,
       instructorId: instructorProfile.id,
     });
-    return this.responseOk(course.id);
+    return this.responseOk({ id: course.id });
   }
 
   async getCourseInfo(courseId: number, userId: number) {
@@ -40,5 +40,18 @@ export class CourseService extends BaseService {
       .andWhere('P.userId = :userId', { userId })
       .getOne();
     return this.responseOk(courseInfo);
+  }
+
+  async deleteCourse(courseId: number, userId: number) {
+    const courseInfo = await this.courseRepo
+      .createQueryBuilder('C')
+      .innerJoin('C.profile', 'P')
+      .leftJoinAndSelect('C.categories', 'CTG')
+      .where('C.id = :id', { id: courseId })
+      .andWhere('P.userId = :userId', { userId })
+      .getOne();
+    if (!courseInfo) throw new NotFoundException(`Course doesn't exist`);
+    await this.courseRepo.remove(courseInfo);
+    return this.responseOk();
   }
 }
