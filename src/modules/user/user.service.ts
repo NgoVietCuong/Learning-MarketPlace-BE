@@ -35,10 +35,11 @@ export class UserService extends BaseService {
   async changePassword(body: ChangePasswordDto, userId: number) {
     const { currentPassword, newPassword } = body;
     const user = await this.userRepo.findOneBy({ id: userId });
-    if (!user.password) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
 
-    const matchPassword = await bcrypt.compare(currentPassword, user.password);
-    if (!matchPassword) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
+    if (user.password) {
+      const matchPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!matchPassword) throw new UnauthorizedException(this.trans.t('messages.PASSWORD_INCORRECT'));
+    }
 
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(newPassword, salt);
