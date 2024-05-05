@@ -7,6 +7,8 @@ import { Repository, In } from 'typeorm';
 import { BaseService } from '../base/base.service';
 import { Category } from 'src/entities/category.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
+import { UpdateCourseDto } from './dto/update-course.dto';
+import { UpdatePublishCourseDto } from './dto/update-publish.dto';
 
 @Injectable()
 export class CourseService extends BaseService {
@@ -34,18 +36,40 @@ export class CourseService extends BaseService {
   }
 
   async getCourseInfo(courseId: number, userId: number) {
-    const courseInfo = await this.courseRepo
-      .createQueryBuilder('C')
-      .innerJoin('C.profile', 'P')
-      .leftJoinAndSelect('C.categories', 'CTG')
-      .where('C.id = :id', { id: courseId })
-      .andWhere('P.userId = :userId', { userId })
-      .getOne();
+    const courseInfo = await this.getCourse(courseId, userId);
     return this.responseOk(courseInfo);
   }
 
   async deleteCourse(courseId: number, userId: number) {
-    const courseInfo = await this.courseRepo
+    const course = await this.getCourse(courseId, userId);
+    if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
+    await this.courseRepo.remove(course);
+    return this.responseOk();
+  }
+
+  async updateCourse(courseId: number, userId: number, body: UpdateCourseDto) {
+    const { categoryIds, ...properties } = body;
+    let course = await this.getCourse(courseId, userId);
+    if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
+
+    const slug = await this.generateSlug(body.title, this.courseRepo, 'slug');
+    const categories = await this.categoryRepo.findBy({ id: In(categoryIds) });
+    course = Object.assign(course, { ...properties, slug, categories });
+    await this.courseRepo.save(course);
+    return this.responseOk();
+  }
+
+  async updatePublishCourse(courseId: number, userId: number, body: UpdatePublishCourseDto) {
+    const { isPublished } = body;
+    let course = await this.getCourse(courseId, userId);
+    if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
+
+    await this.courseRepo.update({ id: courseId }, { isPublished });
+    return this.responseOk();
+  }
+
+  async getCourse(courseId: number, userId: number) {
+    const course = await this.courseRepo
       .createQueryBuilder('C')
       .innerJoin('C.profile', 'P')
       .leftJoinAndSelect('C.categories', 'CTG')
@@ -53,8 +77,6 @@ export class CourseService extends BaseService {
       .andWhere('P.userId = :userId', { userId })
       .getOne();
 
-    if (!courseInfo) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
-    await this.courseRepo.remove(courseInfo);
-    return this.responseOk();
+    return course;
   }
 }
