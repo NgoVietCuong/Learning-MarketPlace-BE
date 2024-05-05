@@ -1,3 +1,4 @@
+import { I18nService } from 'nestjs-i18n';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { Course } from 'src/entities/course.entity';
@@ -10,6 +11,7 @@ import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 @Injectable()
 export class CourseService extends BaseService {
   constructor(
+    private readonly trans: I18nService,
     @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
     @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
     @InjectRepository(InstructorProfile) private readonly instructorProfileRepo: Repository<InstructorProfile>,
@@ -50,7 +52,8 @@ export class CourseService extends BaseService {
       .where('C.id = :id', { id: courseId })
       .andWhere('P.userId = :userId', { userId })
       .getOne();
-    if (!courseInfo) throw new NotFoundException(`Course doesn't exist`);
+
+    if (!courseInfo) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
     await this.courseRepo.remove(courseInfo);
     return this.responseOk();
   }
