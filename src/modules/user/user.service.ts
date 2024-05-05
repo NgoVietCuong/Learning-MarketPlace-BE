@@ -25,7 +25,10 @@ export class UserService extends BaseService {
   }
 
   async getUser(userId: number) {
-    const user = await this.userRepo.findOneBy({ id: userId, emailVerified: true, isActive: true });
+    const user = await this.userRepo.findOne({
+      where: { id: userId, emailVerified: true, isActive: true },
+      relations: ['roles'],
+    });
     return this.responseOk(user);
   }
 
