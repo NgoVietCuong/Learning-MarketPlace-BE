@@ -152,6 +152,7 @@ export class AuthService extends BaseService {
     }
     if (user && !user.isActive) throw new UnauthorizedException(this.trans.t('messages.USER_DEACTIVATED'));
     if (user && !user.avatar) await this.userService.update(user.id, { avatar: picture });
+    if (user && !user.emailVerified) await this.userService.update(user.id, { emailVerified: email_verified });
 
     const accessPayload = { id: user.id, email: user.email, roles: user.roles };
     const refreshPayload = { id: user.id, email: user.email };
