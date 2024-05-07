@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, MaxLength, MinLength, IsOptional } from 'class-validator';
 
 export class ChangeInstructorProfileDto {
@@ -15,14 +16,17 @@ export class ChangeInstructorProfileDto {
   @MaxLength(1000)
   biography: string;
 
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   twitterLink: string;
 
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   linkedinLink: string;
 
+  @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   youtubeLink: string;
