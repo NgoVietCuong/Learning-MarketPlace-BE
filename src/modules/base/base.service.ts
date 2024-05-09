@@ -95,4 +95,8 @@ export class BaseService {
     if (result) slug += `${options.replacement}${Date.now()}`;
     return slug;
   }
+
+  searchCaseInsensitive(searchField: string): string {
+    return `LOWER(REPLACE(${searchField}, ' ', '')) LIKE LOWER(REPLACE(:keyword, ' ', ''))`;
+  }
 }
