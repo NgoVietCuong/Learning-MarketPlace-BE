@@ -9,6 +9,7 @@ import { Category } from 'src/entities/category.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdatePublishCourseDto } from './dto/update-publish.dto';
+import { ListCoursesDto } from './dto/list-courses.dto';
 
 @Injectable()
 export class CourseService extends BaseService {
@@ -66,6 +67,20 @@ export class CourseService extends BaseService {
 
     await this.courseRepo.update({ id: courseId }, { isPublished });
     return this.responseOk();
+  }
+
+  async getListCourses(query: ListCoursesDto, userId: number) {
+    const { page, limit, search, categoryId } = query;
+    const queryBuilder = this.courseRepo
+      .createQueryBuilder('C')
+      .innerJoin('C.profile', 'P')
+      .leftJoinAndSelect('C.categories', 'CTG')
+      .where('P.userId = :userId', { userId });
+    if (categoryId) queryBuilder.andWhere('CTG.id = :categoryId', { categoryId: categoryId });
+    if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` })
+    queryBuilder.orderBy('C.createdAt', 'DESC');
+    const courses = await this.customPaginate<Course>(queryBuilder, page, limit);
+    return this.responseOk(courses) 
   }
 
   async getCourse(courseId: number, userId: number) {
