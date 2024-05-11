@@ -56,7 +56,7 @@ export class CourseService extends BaseService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      await this.courseRepo.remove(course);
+      await queryRunner.manager.remove(course);
       await queryRunner.manager.remove(sections);
       await queryRunner.commitTransaction();
       return this.responseOk();
