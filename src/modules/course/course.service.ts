@@ -97,6 +97,7 @@ export class CourseService extends BaseService {
       .innerJoin('C.profile', 'P')
       .leftJoinAndSelect('C.categories', 'CTG')
       .where('P.userId = :userId', { userId });
+
     if (categoryId) queryBuilder.andWhere('CTG.id = :categoryId', { categoryId: categoryId });
     if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` });
     queryBuilder.orderBy('C.createdAt', 'DESC');
