@@ -8,9 +8,11 @@ import {
   JoinTable,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { InstructorProfile } from './instructor-profile.entity';
 import { Category } from './category.entity';
+import { Section } from './course-section.entity';
 
 @Entity('courses')
 export class Course {
@@ -18,7 +20,7 @@ export class Course {
   id: number;
 
   @Column()
-  instructorId: number
+  instructorId: number;
 
   @Column()
   title: string;
@@ -53,8 +55,11 @@ export class Course {
   @UpdateDateColumn()
   updatedAt: string;
 
+  @OneToMany(() => Section, (section) => section.course)
+  sections: Section[];
+
   @ManyToOne(() => InstructorProfile, (profile) => profile.courses)
-  @JoinColumn({name: 'instructor_id'})
+  @JoinColumn({ name: 'instructor_id' })
   profile: InstructorProfile;
 
   @ManyToMany(() => Category, (category) => category.courses)

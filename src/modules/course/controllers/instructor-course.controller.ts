@@ -9,6 +9,8 @@ import { User } from 'src/app/decorators/user';
 import { UpdateCourseDto } from '../dto/update-course.dto';
 import { UpdatePublishCourseDto } from '../dto/update-publish.dto';
 import { ListCoursesDto } from '../dto/list-courses.dto';
+import { CreateSectionDto } from '../dto/create-section.dto';
+import { UpdateSectionDto } from '../dto/update-section.dto';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
@@ -19,7 +21,7 @@ export class InstructorCourseController {
   constructor(private courseService: CourseService) {}
 
   @ApiOperation({ summary: 'Create course' })
-  @Post('')
+  @Post()
   async createCourse(@Body() body: CreateCourseDto, @User('id') id: number) {
     return this.courseService.createCourse(body, id);
   }
@@ -56,6 +58,24 @@ export class InstructorCourseController {
     @Body() body: UpdatePublishCourseDto,
   ) {
     return this.courseService.updatePublishCourse(courseId, id, body);
+  }
+
+  @ApiOperation({ summary: 'Create new section' })
+  @Post('section')
+  async createSection(@Body() body: CreateSectionDto) {
+    return this.courseService.createSection(body);
+  }
+
+  @ApiOperation({ summary: 'Update section' })
+  @Patch('section/:sectionId')
+  async updateSection(@Param('sectionId') sectionId: number, @Body() body: UpdateSectionDto) {
+    return this.courseService.updateSection(sectionId, body);
+  }
+
+  @ApiOperation({ summary: 'Delete section' })
+  @Delete('section/:sectionId')
+  async deleteSection(@Param('sectionId') sectionId: number) {
+    return this.courseService.deleteSection(sectionId);
   }
 
   
