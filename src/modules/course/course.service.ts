@@ -50,8 +50,23 @@ export class CourseService extends BaseService {
   async deleteCourse(courseId: number, userId: number) {
     const course = await this.getCourse(courseId, userId);
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
-    await this.courseRepo.remove(course);
-    return this.responseOk();
+    const sections = course.sections;
+    
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await this.courseRepo.remove(course);
+      await queryRunner.manager.remove(sections);
+      await queryRunner.commitTransaction();
+      return this.responseOk();
+    } catch (e) {
+      console.log('\nFailed to delete course', e);
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'delete course' } }));
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async updateCourse(courseId: number, userId: number, body: UpdateCourseDto) {
@@ -132,7 +147,6 @@ export class CourseService extends BaseService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
     try {
       const afterSections = await queryRunner.manager.find(Section, {
         where: { courseId: section.courseId, sortOrder: MoreThan(section.sortOrder) },
