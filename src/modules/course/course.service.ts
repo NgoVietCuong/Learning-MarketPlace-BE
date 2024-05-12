@@ -154,7 +154,6 @@ export class CourseService extends BaseService {
 
   async deleteSection(sectionId: number) {
     const section = await this.sectionRepo.findOne({ where: { id: sectionId }, relations: ['lessons'] });
-
     if (!section) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Section' } }));
 
     const lessons = section.lessons;
@@ -217,7 +216,6 @@ export class CourseService extends BaseService {
 
   async deleteLesson(lessonId: number) {
     const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
-
     if (!lesson) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Lesson' } }));
 
     const queryRunner = this.dataSource.createQueryRunner();
