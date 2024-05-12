@@ -13,6 +13,7 @@ import {
 import { InstructorProfile } from './instructor-profile.entity';
 import { Category } from './category.entity';
 import { Section } from './course-section.entity';
+import { Enrollment } from './enrollment.entity';
 
 @Entity('courses')
 export class Course {
@@ -54,6 +55,9 @@ export class Course {
 
   @UpdateDateColumn()
   updatedAt: string;
+
+  @OneToMany(() => Enrollment, (enrollment) => enrollment.course)
+  enrollments: Enrollment[];
 
   @OneToMany(() => Section, (section) => section.course)
   sections: Section[];
