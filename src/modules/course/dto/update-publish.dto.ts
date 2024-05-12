@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsBoolean } from 'class-validator';
 
-export class UpdatePublishCourseDto {
+export class UpdatePublishDto {
   @IsBoolean()
   @IsNotEmpty()
   isPublished: boolean;

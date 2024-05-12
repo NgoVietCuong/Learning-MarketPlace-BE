@@ -8,11 +8,14 @@ import { BaseService } from '../base/base.service';
 import { Category } from 'src/entities/category.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import { UpdatePublishCourseDto } from './dto/update-publish.dto';
+import { UpdatePublishDto } from './dto/update-publish.dto';
 import { ListCoursesDto } from './dto/list-courses.dto';
 import { CreateSectionDto } from './dto/create-section.dto';
 import { Section } from 'src/entities/course-section.entity';
 import { UpdateSectionDto } from './dto/update-section.dto';
+import { CreateLessonDto } from './dto/create-lesson.dto';
+import { Lesson } from 'src/entities/course-lesson.entity';
+import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 @Injectable()
 export class CourseService extends BaseService {
@@ -21,6 +24,7 @@ export class CourseService extends BaseService {
     private readonly trans: I18nService,
     @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
     @InjectRepository(Section) private readonly sectionRepo: Repository<Section>,
+    @InjectRepository(Lesson) private readonly lessonRepo: Repository<Lesson>,
     @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
     @InjectRepository(InstructorProfile) private readonly instructorProfileRepo: Repository<InstructorProfile>,
   ) {
@@ -51,13 +55,19 @@ export class CourseService extends BaseService {
     const course = await this.getCourse(courseId, userId);
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
     const sections = course.sections;
-    
+    let lessons = [];
+    sections.forEach((section) => {
+      lessons = lessons.concat(section.lessons);
+    });
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       await queryRunner.manager.remove(course);
       await queryRunner.manager.remove(sections);
+      await queryRunner.manager.remove(lessons);
+
       await queryRunner.commitTransaction();
       return this.responseOk();
     } catch (e) {
@@ -81,7 +91,7 @@ export class CourseService extends BaseService {
     return this.responseOk();
   }
 
-  async updatePublishCourse(courseId: number, userId: number, body: UpdatePublishCourseDto) {
+  async updatePublishCourse(courseId: number, userId: number, body: UpdatePublishDto) {
     const { isPublished } = body;
     let course = await this.getCourse(courseId, userId);
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
@@ -111,9 +121,11 @@ export class CourseService extends BaseService {
       .innerJoin('C.profile', 'P')
       .leftJoinAndSelect('C.categories', 'CTG')
       .leftJoinAndSelect('C.sections', 'S')
+      .leftJoinAndSelect('S.lessons', 'L')
       .where('C.id = :id', { id: courseId })
       .andWhere('P.userId = :userId', { userId })
       .orderBy('S.sortOrder', 'ASC')
+      .addOrderBy('L.sortOrder', 'ASC')
       .getOne();
 
     return course;
@@ -141,9 +153,11 @@ export class CourseService extends BaseService {
   }
 
   async deleteSection(sectionId: number) {
-    const section = await this.sectionRepo.findOneBy({ id: sectionId });
+    const section = await this.sectionRepo.findOne({ where: { id: sectionId }, relations: ['lessons'] });
 
     if (!section) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Section' } }));
+
+    const lessons = section.lessons;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -157,6 +171,7 @@ export class CourseService extends BaseService {
       });
 
       await queryRunner.manager.remove(section);
+      await queryRunner.manager.remove(lessons);
       await queryRunner.manager.save(Section, afterSections);
       await queryRunner.commitTransaction();
       return this.responseOk();
@@ -164,6 +179,66 @@ export class CourseService extends BaseService {
       console.log('\nFailed to delete section', e);
       await queryRunner.rollbackTransaction();
       throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'delete section' } }));
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  //Lesson management
+  async createLesson(body: CreateLessonDto) {
+    const { title, sectionId, contentType, content } = body;
+    const lastLesson = await this.lessonRepo.findOne({ where: { sectionId }, order: { sortOrder: 'DESC' } });
+
+    const lesson = await this.lessonRepo.save({
+      title,
+      sectionId,
+      contentType,
+      content,
+      sortOrder: lastLesson ? lastLesson.sortOrder + 1 : 1,
+    });
+    return this.responseOk({ id: lesson.id });
+  }
+
+  async updateLesson(lessonId: number, body: UpdateLessonDto) {
+    const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
+    if (!lesson) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Lesson' } }));
+    await this.lessonRepo.update({ id: lessonId }, { ...body });
+    return this.responseOk();
+  }
+
+  async updatePublishLesson(lessonId: number, body: UpdatePublishDto) {
+    const { isPublished } = body;
+    const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
+    if (!lesson) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Lesson' } }));
+
+    await this.lessonRepo.update({ id: lessonId }, { isPublished });
+    return this.responseOk();
+  }
+
+  async deleteLesson(lessonId: number) {
+    const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
+
+    if (!lesson) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Lesson' } }));
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const afterLessons = await queryRunner.manager.find(Lesson, {
+        where: { sectionId: lesson.sectionId, sortOrder: MoreThan(lesson.sortOrder) },
+      });
+      afterLessons.forEach((lesson) => {
+        lesson.sortOrder -= 1;
+      });
+
+      await queryRunner.manager.remove(lesson);
+      await queryRunner.manager.save(Lesson, afterLessons);
+      await queryRunner.commitTransaction();
+      return this.responseOk();
+    } catch (e) {
+      console.log('\nFailed to delete lesson', e);
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'delete lesson' } }));
     } finally {
       await queryRunner.release();
     }

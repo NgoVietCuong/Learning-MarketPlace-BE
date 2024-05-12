@@ -6,24 +6,31 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
-  OneToMany,
 } from 'typeorm';
-import { Course } from './course.entity';
-import { Lesson } from './course-lesson.entity';
+import { Section } from './course-section.entity';
 
-@Entity('sections')
-export class Section {
+@Entity('lessons')
+export class Lesson {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
   @Column()
-  courseId: number;
+  sectionId: number;
 
   @Column()
   title: string;
 
   @Column()
+  contentType: string;
+
+  @Column()
+  content: string;
+
+  @Column()
   sortOrder: number;
+
+  @Column()
+  isPublished: boolean;
 
   @CreateDateColumn()
   createdAt: string;
@@ -31,10 +38,7 @@ export class Section {
   @UpdateDateColumn()
   updatedAt: string;
 
-  @ManyToOne(() => Course, (course) => course.sections)
-  @JoinColumn({ name: 'course_id' })
-  course: Course;
-
-  @OneToMany(() => Lesson, (lesson) => lesson.section)
-  lessons: Lesson[]
+  @ManyToOne(() => Section, (section) => section.lessons)
+  @JoinColumn({ name: 'section_id' })
+  section: Section;
 }
