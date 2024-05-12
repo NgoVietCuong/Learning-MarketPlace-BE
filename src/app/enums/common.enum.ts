@@ -19,3 +19,9 @@ export enum Roles {
   INSTRUCTOR = 'INSTRUCTOR',
   STUDENT = 'STUDENT',
 }
+
+export enum LessonContentType{
+  VIDEO = 'video',
+  TEXT = 'text',
+  DOCUMENT = 'document'
+}

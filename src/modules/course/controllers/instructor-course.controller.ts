@@ -7,10 +7,12 @@ import { CreateCourseDto } from '../dto/create-course.dto';
 import { CourseService } from '../course.service';
 import { User } from 'src/app/decorators/user';
 import { UpdateCourseDto } from '../dto/update-course.dto';
-import { UpdatePublishCourseDto } from '../dto/update-publish.dto';
+import { UpdatePublishDto } from '../dto/update-publish.dto';
 import { ListCoursesDto } from '../dto/list-courses.dto';
 import { CreateSectionDto } from '../dto/create-section.dto';
 import { UpdateSectionDto } from '../dto/update-section.dto';
+import { CreateLessonDto } from '../dto/create-lesson.dto';
+import { UpdateLessonDto } from '../dto/update-lesson.dto';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
@@ -55,7 +57,7 @@ export class InstructorCourseController {
   async updatePublishCourse(
     @Param('courseId') courseId: number,
     @User('id') id: number,
-    @Body() body: UpdatePublishCourseDto,
+    @Body() body: UpdatePublishDto,
   ) {
     return this.courseService.updatePublishCourse(courseId, id, body);
   }
@@ -78,5 +80,27 @@ export class InstructorCourseController {
     return this.courseService.deleteSection(sectionId);
   }
 
-  
+  @ApiOperation({ summary: 'Create new lesson' })
+  @Post('lesson')
+  async createLesson(@Body() body: CreateLessonDto) {
+    return this.courseService.createLesson(body);
+  }
+
+  @ApiOperation({ summary: 'Update lesson' })
+  @Patch('lesson/:lessonId')
+  async updateLesson(@Param('lessonId') lessonId: number, @Body() body: UpdateLessonDto) {
+    return this.courseService.updateLesson(lessonId, body);
+  }
+
+  @ApiOperation({ summary: 'Update publish lesson' })
+  @Patch('lesson/:lessonId/publish')
+  async updatePublishLesson(@Param('lessonId') lessonId: number, @Body() body: UpdatePublishDto) {
+    return this.courseService.updatePublishLesson(lessonId, body);
+  }
+
+  @ApiOperation({ summary: 'Delete lesson' })
+  @Delete('lesson/:lessonId')
+  async deleteLesson(@Param('lessonId') lessonId: number) {
+    return this.courseService.deleteLesson(lessonId);
+  }
 }
