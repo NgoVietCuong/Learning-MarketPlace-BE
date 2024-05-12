@@ -13,6 +13,7 @@ import * as path from 'path';
 import * as redisStore from 'cache-manager-redis-store';
 import { JwtAuthGuard } from 'src/app/guards/jwt.guard';
 import { CourseModule } from './course/course.module';
+import { LearningModule } from './learning/learning.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { CourseModule } from './course/course.module';
     MailModule,
     UserModule,
     CourseModule,
+    LearningModule,
   ],
   providers: [
     {

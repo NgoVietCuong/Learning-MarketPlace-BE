@@ -7,10 +7,12 @@ import {
   OneToOne,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from './role.entity';
 import { InstructorProfile } from './instructor-profile.entity';
+import { Enrollment } from './enrollment.entity';
 
 @Entity('users')
 export class User {
@@ -41,6 +43,9 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: string;
+
+  @OneToMany(() => Enrollment, (enrollment) => enrollment.user)
+  enrollments: Enrollment[];
 
   @OneToOne(() => InstructorProfile, (profile) => profile.user)
   profile: InstructorProfile;
