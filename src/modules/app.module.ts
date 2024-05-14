@@ -15,6 +15,7 @@ import { JwtAuthGuard } from 'src/app/guards/jwt.guard';
 import { InstructorCourseModule } from './instructor-course/instructor-course.module';
 import { LearningModule } from './learning/learning.module';
 import { InstructorModule } from './instructor/instructor.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { InstructorModule } from './instructor/instructor.module';
     InstructorCourseModule,
     LearningModule,
     InstructorModule,
+    CategoryModule,
   ],
   providers: [
     {

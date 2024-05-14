@@ -8,7 +8,7 @@ import { ChangeInstructorProfileDto } from './dto/change-instructor-profile.dto'
 
 @Injectable()
 export class InstructorService extends BaseService {
-  constructor(@InjectRepository(InstructorProfile) private readonly instructorProfileRepo: Repository<InstructorProfile>,) {
+  constructor(@InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,) {
     super();
   }
 

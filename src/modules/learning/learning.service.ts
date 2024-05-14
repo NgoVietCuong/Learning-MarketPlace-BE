@@ -11,7 +11,7 @@ import { EnrollCourseDto } from './dto/enroll.dto';
 export class LearningService extends BaseService {
   constructor(
     private readonly trans: I18nService,
-    @InjectRepository(Enrollment) private readonly enrollmentRepo: Repository<Enrollment>,
+    @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
   ) {
     super();
   }
