@@ -3,9 +3,9 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { User } from 'src/app/decorators/user';
 import { AllowAccess } from 'src/app/decorators/allow-access';
-import { UserService } from '../user.service';
-import { ChangeAvatarDto } from '../dto/change-avatar.dto';
-import { ChangePasswordDto } from '../dto/change-password.dto';
+import { UserService } from './user.service';
+import { ChangeAvatarDto } from './dto/change-avatar.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Roles } from 'src/app/enums/common.enum';
 
 @ApiBearerAuth()
