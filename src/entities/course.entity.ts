@@ -12,7 +12,7 @@ import {
 } from 'typeorm';
 import { InstructorProfile } from './instructor-profile.entity';
 import { Category } from './category.entity';
-import { Section } from './course-section.entity';
+import { Section } from './section.entity';
 import { Enrollment } from './enrollment.entity';
 
 @Entity('courses')

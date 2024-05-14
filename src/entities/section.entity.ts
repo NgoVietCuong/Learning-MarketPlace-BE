@@ -9,7 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Course } from './course.entity';
-import { Lesson } from './course-lesson.entity';
+import { Lesson } from './lesson.entity';
 
 @Entity('sections')
 export class Section {

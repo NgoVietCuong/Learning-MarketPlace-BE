@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Section } from './course-section.entity';
+import { Section } from './section.entity';
 
 @Entity('lessons')
 export class Lesson {
