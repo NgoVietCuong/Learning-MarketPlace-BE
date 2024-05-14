@@ -1,24 +1,24 @@
 import { I18nService } from 'nestjs-i18n';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCourseDto } from './dto/create-course.dto';
-import { Course } from 'src/entities/course.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource, MoreThan } from 'typeorm';
 import { BaseService } from '../base/base.service';
+import { Course } from 'src/entities/course.entity';
+import { Lesson } from 'src/entities/lesson.entity';
+import { Section } from 'src/entities/section.entity';
 import { Category } from 'src/entities/category.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
+import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { UpdatePublishDto } from './dto/update-publish.dto';
 import { ListCoursesDto } from './dto/list-courses.dto';
 import { CreateSectionDto } from './dto/create-section.dto';
-import { Section } from 'src/entities/course-section.entity';
 import { UpdateSectionDto } from './dto/update-section.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
-import { Lesson } from 'src/entities/course-lesson.entity';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 @Injectable()
-export class CourseService extends BaseService {
+export class InstructorCourseService extends BaseService {
   constructor(
     private dataSource: DataSource,
     private readonly trans: I18nService,
