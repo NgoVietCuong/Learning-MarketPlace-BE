@@ -26,4 +26,14 @@ export class LearningService extends BaseService {
     });
     return this.responseOk();
   }
+
+  async getMyCourseList(userId: number) {
+    const myCourses = await this.enrollmentRepo
+      .createQueryBuilder('E')
+      .leftJoinAndSelect('E.course', 'C')
+      .where('E.userId = :userId', { userId })
+      .orderBy('E.updatedAt', 'DESC')
+      .getMany();
+    return this.responseOk(myCourses);
+  }
 }
