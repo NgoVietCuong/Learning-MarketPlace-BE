@@ -15,9 +15,9 @@ import { ChangeAvatarDto } from './dto/change-avatar.dto';
 export class UserService extends BaseService {
   constructor(
     private readonly trans: I18nService,
-    @InjectRepository(Role) private readonly roleRepo: Repository<Role>,
-    @InjectRepository(User) private readonly userRepo: Repository<User>,
-    @InjectRepository(InstructorProfile) private readonly instructorProfileRepo: Repository<InstructorProfile>,
+    @InjectRepository(Role) private roleRepo: Repository<Role>,
+    @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
   ) {
     super();
   }

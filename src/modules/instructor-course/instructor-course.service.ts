@@ -22,11 +22,11 @@ export class InstructorCourseService extends BaseService {
   constructor(
     private dataSource: DataSource,
     private readonly trans: I18nService,
-    @InjectRepository(Course) private readonly courseRepo: Repository<Course>,
-    @InjectRepository(Section) private readonly sectionRepo: Repository<Section>,
-    @InjectRepository(Lesson) private readonly lessonRepo: Repository<Lesson>,
-    @InjectRepository(Category) private readonly categoryRepo: Repository<Category>,
-    @InjectRepository(InstructorProfile) private readonly instructorProfileRepo: Repository<InstructorProfile>,
+    @InjectRepository(Course) private courseRepo: Repository<Course>,
+    @InjectRepository(Section) private sectionRepo: Repository<Section>,
+    @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
+    @InjectRepository(Category) private categoryRepo: Repository<Category>,
+    @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
   ) {
     super();
   }

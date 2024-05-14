@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class CategoryService extends BaseService {
-  constructor(@InjectRepository(Category) private readonly categoryRepo: Repository<Category>) {
+  constructor(@InjectRepository(Category) private categoryRepo: Repository<Category>) {
     super();
   }
   async getCategoryList() {
