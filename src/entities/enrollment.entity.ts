@@ -6,9 +6,11 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Course } from './course.entity';
+import { LessonProgress } from './lesson-progress.entity';
 
 @Entity('enrollments')
 export class Enrollment {
@@ -37,4 +39,7 @@ export class Enrollment {
   @ManyToOne(() => Course, (course) => course.enrollments)
   @JoinColumn({ name: 'course_id' })
   course: Course;
+
+  @OneToMany(() => LessonProgress, (lessonProgress) => lessonProgress.enrollment)
+  lessonProgresses: LessonProgress[];
 }

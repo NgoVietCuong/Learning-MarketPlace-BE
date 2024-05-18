@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AllowAccess } from 'src/app/decorators/allow-access';
 import { Roles } from 'src/app/enums/common.enum';
@@ -6,6 +6,7 @@ import { RoleGuard } from 'src/app/guards/role.guard';
 import { LearningService } from './learning.service';
 import { User } from 'src/app/decorators/user';
 import { EnrollCourseDto } from './dto/enroll.dto';
+import { UpdateProgressDto } from './dto/update-progress.dto';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
@@ -25,5 +26,11 @@ export class LearningController {
   @Get('my-courses')
   async getMyCourseList(@User('id') id: number) {
     return this.learningService.getMyCourseList(id);
+  }
+
+  @ApiOperation({ summary: 'Update progress' })
+  @Put('update-progress')
+  async updateProgress(@Body() body: UpdateProgressDto) {
+    return this.learningService.updateProgress(body);
   }
 }
