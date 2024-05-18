@@ -9,6 +9,7 @@ import { UpdateProgressDto } from './dto/update-progress.dto';
 import { LessonProgress } from 'src/entities/lesson-progress.entity';
 import { Lesson } from 'src/entities/lesson.entity';
 import { LessonContentType } from 'src/app/enums/common.enum';
+import { Course } from 'src/entities/course.entity';
 
 @Injectable()
 export class LearningService extends BaseService {
@@ -16,6 +17,7 @@ export class LearningService extends BaseService {
     private dataSource: DataSource,
     private readonly trans: I18nService,
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
+    @InjectRepository(Course) private courseRepo: Repository<Course>,
     @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
     @InjectRepository(LessonProgress) private lessonProgressRepo: Repository<LessonProgress>,
   ) {
@@ -24,6 +26,10 @@ export class LearningService extends BaseService {
 
   async enrollCourse(body: EnrollCourseDto, userId: number) {
     const { courseId } = body;
+    const course = await this.courseRepo.findOneBy({ id: courseId });
+    if (!course.isPublished)
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'enroll course' } }));
+
     const enrollment = await this.enrollmentRepo.findOneBy({ courseId, userId });
     if (enrollment) throw new BadRequestException(this.trans.t('messages.EXIST', { args: { object: 'Enrollment' } }));
     await this.enrollmentRepo.save({
@@ -47,12 +53,15 @@ export class LearningService extends BaseService {
     const { enrollmentId, lessonId, contentProgress } = body;
     let lessonProgress = await this.lessonProgressRepo.findOneBy({ enrollmentId, lessonId });
     const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
+    if (!lesson.isPublished)
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'learn lesson' } }));
     const totalLessons = await this.lessonRepo
       .createQueryBuilder('L')
       .leftJoin('L.section', 'S')
       .leftJoin('S.course', 'C')
       .innerJoin('C.enrollments', 'E')
-      .where('E.id = :id', { id: enrollmentId })
+      .where('L.isPublished = :isPublished', { isPublished: true })
+      .andWhere('E.id = :id', { id: enrollmentId })
       .getCount();
 
     let isCompleted = false;
@@ -79,7 +88,7 @@ export class LearningService extends BaseService {
       const [data, completedLessons] = totalCompletedLessons;
       const progressStatus = Math.round((completedLessons / totalLessons) * 100);
       await queryRunner.manager.update(Enrollment, { id: enrollmentId }, { progressStatus });
-      
+
       await queryRunner.commitTransaction();
       return this.responseOk();
     } catch (e) {
