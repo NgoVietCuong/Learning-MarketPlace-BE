@@ -6,8 +6,10 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { Section } from './section.entity';
+import { LessonProgress } from './lesson-progress.entity';
 
 @Entity('lessons')
 export class Lesson {
@@ -41,4 +43,7 @@ export class Lesson {
   @ManyToOne(() => Section, (section) => section.lessons)
   @JoinColumn({ name: 'section_id' })
   section: Section;
+
+  @OneToOne(() => LessonProgress, (LessonProgress) => LessonProgress.lesson)
+  lessonProgress: LessonProgress;
 }
