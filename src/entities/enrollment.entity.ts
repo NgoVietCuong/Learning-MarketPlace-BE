@@ -7,10 +7,12 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Course } from './course.entity';
 import { LessonProgress } from './lesson-progress.entity';
+import { Review } from './review.entity';
 
 @Entity('enrollments')
 export class Enrollment {
@@ -42,4 +44,7 @@ export class Enrollment {
 
   @OneToMany(() => LessonProgress, (lessonProgress) => lessonProgress.enrollment)
   lessonProgresses: LessonProgress[];
+
+  @OneToOne(() => Review, (review) => review.enrollment)
+  review: Review;
 }

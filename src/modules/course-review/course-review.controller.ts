@@ -1,0 +1,30 @@
+import { Body, Controller, Get, Patch, Post, Put, Param, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AllowAccess } from 'src/app/decorators/allow-access';
+import { Roles } from 'src/app/enums/common.enum';
+import { RoleGuard } from 'src/app/guards/role.guard';
+import { User } from 'src/app/decorators/user';
+import { CourseReviewService } from './course-review.service';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
+
+@ApiBearerAuth()
+@UseGuards(RoleGuard)
+@AllowAccess(Roles.STUDENT)
+@ApiTags('Course review')
+@Controller('review')
+export class CourseReviewController {
+  constructor(private courseReviewService: CourseReviewService) {}
+
+  @ApiOperation({ summary: 'Create course review' })
+  @Post()
+  async createReview(@Body() body: CreateReviewDto) {
+    return this.courseReviewService.createReview(body);
+  }
+
+  @ApiOperation({ summary: 'Update course review' })
+  @Patch("/:reviewId")
+  async updateReview(@Body() body: UpdateReviewDto, @Param('reviewId') reviewId: number) {
+    return this.courseReviewService.updateReview(body, reviewId);
+  }
+}
