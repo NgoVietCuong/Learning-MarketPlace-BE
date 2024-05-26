@@ -184,6 +184,11 @@ export class InstructorCourseService extends BaseService {
   }
 
   //Lesson management
+  async getLesson(lessonId: number) {
+    const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
+    return this.responseOk(lesson);
+  }
+
   async createLesson(body: CreateLessonDto) {
     const { title, sectionId, contentType, content } = body;
     const lastLesson = await this.lessonRepo.findOne({ where: { sectionId }, order: { sortOrder: 'DESC' } });

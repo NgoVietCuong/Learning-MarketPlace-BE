@@ -80,6 +80,12 @@ export class InstructorCourseController {
     return this.instructorCourseService.deleteSection(sectionId);
   }
 
+  @ApiOperation({ summary: 'Get lesson details' })
+  @Get('lesson/:lessonId')
+  async getLessonDetails(@Param('lessonId') lessonId: number) {
+    return this.instructorCourseService.getLesson(lessonId);
+  }
+
   @ApiOperation({ summary: 'Create new lesson' })
   @Post('lesson')
   async createLesson(@Body() body: CreateLessonDto) {
