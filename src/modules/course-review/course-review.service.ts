@@ -7,12 +7,15 @@ import { Enrollment } from 'src/entities/enrollment.entity';
 import { Repository } from 'typeorm';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { ListReviewsDto } from './dto/get-list-reviews.dto';
+import { Course } from 'src/entities/course.entity';
 
 @Injectable()
 export class CourseReviewService extends BaseService {
   constructor(
     private readonly trans: I18nService,
     @InjectRepository(Review) private reviewRepo: Repository<Review>,
+    @InjectRepository(Course) private courseRepo: Repository<Course>,
   ) {
     super();
   }
@@ -34,5 +37,19 @@ export class CourseReviewService extends BaseService {
     if (!review) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Review' } }));
     await this.reviewRepo.update({ id: reviewId }, { ...body });
     return this.responseOk();
+  }
+
+  async getListReviews(query: ListReviewsDto) {
+    const { page, limit, slug, rating } = query;
+    const queryBuilder = this.reviewRepo
+      .createQueryBuilder('R')
+      .innerJoin('R.enrollment', 'E')
+      .innerJoin('E.course', 'C')
+      .where('C.slug = :slug', { slug });
+
+    if (rating) queryBuilder.andWhere('R.rating = :rating', { rating });
+    queryBuilder.orderBy('R.updatedAt', 'DESC');
+    const reviews = await this.customPaginate<Review>(queryBuilder, page, limit);
+    return this.responseOk(reviews);
   }
 }
