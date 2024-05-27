@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Section } from './section.entity';
 import { LessonProgress } from './lesson-progress.entity';
+import { LessonContentType } from 'src/app/enums/common.enum';
 
 @Entity('lessons')
 export class Lesson {
@@ -23,10 +24,13 @@ export class Lesson {
   title: string;
 
   @Column()
-  contentType: string;
+  contentType: LessonContentType;
 
   @Column()
   content: string;
+
+  @Column()
+  fileName: string;
 
   @Column()
   sortOrder: number;

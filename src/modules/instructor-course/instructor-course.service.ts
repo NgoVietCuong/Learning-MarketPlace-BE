@@ -190,14 +190,12 @@ export class InstructorCourseService extends BaseService {
   }
 
   async createLesson(body: CreateLessonDto) {
-    const { title, sectionId, contentType, content } = body;
+    const { title, sectionId } = body;
     const lastLesson = await this.lessonRepo.findOne({ where: { sectionId }, order: { sortOrder: 'DESC' } });
 
     const lesson = await this.lessonRepo.save({
       title,
       sectionId,
-      contentType,
-      content,
       sortOrder: lastLesson ? lastLesson.sortOrder + 1 : 1,
     });
     return this.responseOk({ id: lesson.id });
