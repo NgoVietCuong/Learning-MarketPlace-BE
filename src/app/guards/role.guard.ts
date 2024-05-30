@@ -20,18 +20,19 @@ export class RoleGuard extends AuthGuard('jwt') {
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
-      return true;
-    }
-
-    if (err || !user) {
-      throw err || new UnauthorizedException();
-    }
 
     const allowAccessRoles = this.reflector.getAllAndOverride<Roles[]>(ACCESS_ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
+
+    if (isPublic) {
+      return user ? user : true;
+    }
+
+    if (err || !user) {
+      throw err || new UnauthorizedException();
+    }
 
     const roleCodes = user.roles.map((role) => role.code);
     if (!allowAccessRoles.length || roleCodes.some((code) => allowAccessRoles.includes(code))) {

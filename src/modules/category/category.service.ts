@@ -10,7 +10,7 @@ export class CategoryService extends BaseService {
     super();
   }
   async getCategoryList() {
-    const categoryList = await this.categoryRepo.find();
+    const categoryList = await this.categoryRepo.findBy({ isActive: true });
     return this.responseOk(categoryList);
   }
 }

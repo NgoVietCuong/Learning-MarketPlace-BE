@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { RoleGuard } from 'src/app/guards/role.guard';
 import { Public } from 'src/app/decorators/public';
 import { CourseExplorerService } from './course-explorer.service';
 import { User } from 'src/app/decorators/user';
@@ -10,7 +11,8 @@ import { User } from 'src/app/decorators/user';
 export class CourseExplorerController {
   constructor(private courseExplorerService: CourseExplorerService) {}
 
-  @ApiOperation({ summary: 'Get course' })
+  @UseGuards(RoleGuard)
+  @ApiOperation({ summary: 'Get course by slug' })
   @Get('/:slug')
   async getCourse(@User('id') id: number, @Param('slug') slug: string) {
     return this.courseExplorerService.getCourse(id, slug);
