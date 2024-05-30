@@ -52,4 +52,27 @@ export class CourseReviewService extends BaseService {
     const reviews = await this.customPaginate<Review>(queryBuilder, page, limit);
     return this.responseOk(reviews);
   }
+
+  async getAverageRating(courseIds: number[]) {
+    const averageRating = await this.reviewRepo
+      .createQueryBuilder('R')
+      .innerJoin('R.enrollment', 'E')
+      .innerJoin('E.course', 'C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .select('CAST(SUM(R.rating) AS FLOAT) / CAST(COUNT(R.id) AS FLOAT)', 'rating')
+      .getRawOne();
+    
+    return averageRating;
+  }
+
+  async getTotalReviews(courseIds: number[]) {
+    const totalRatings = await this.reviewRepo
+      .createQueryBuilder('R')
+      .innerJoin('R.enrollment', 'E')
+      .innerJoin('E.course', 'C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .getCount();
+
+    return totalRatings;
+  }
 }
