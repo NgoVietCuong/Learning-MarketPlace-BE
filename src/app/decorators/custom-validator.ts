@@ -194,11 +194,6 @@ export function IsStrongPassword(validationOptions?: ValidationOptions) {
   };
 }
 
-export function RequiredIf(requiredCondition: (obj: any, value: any) => boolean, options?: ValidationOptions) {
-  // Validate with condition
-  return ValidateIf((obj, value) => requiredCondition(obj, value) || (!value && value !== undefined), options);
-}
-
 export function IsDifferentFrom(property: string, validationOptions?: ValidationOptions) {
   return (object: any, propertyName: string) => {
     registerDecorator({
