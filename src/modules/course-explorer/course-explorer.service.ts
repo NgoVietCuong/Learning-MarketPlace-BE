@@ -28,7 +28,7 @@ export class CourseExplorerService extends BaseService {
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
       .orderBy('S.sortOrder', 'ASC')
       .addOrderBy('L.sortOrder', 'ASC')
-      .select(['C', 'P', 'S', 'L.id', 'L.title']);
+      .select(['C', 'P', 'S', 'L.id', 'L.title', 'L.contentType', 'L.duration']);
 
     const course = await queryBuilder.getOne();
     const totalStudents = await this.enrollmentRepo.countBy({ courseId: course.id });
