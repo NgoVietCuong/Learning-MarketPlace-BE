@@ -7,9 +7,8 @@ export class UpdateCourseDto extends CreateCourseDto {
   @IsNotEmpty()
   level: string;
 
-  @ApiPropertyOptional()
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   imagePreview: string;
 
   @ApiPropertyOptional()
