@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum } from "class-validator";
+import { IsString, IsNotEmpty, IsEnum, IsNumber } from "class-validator";
 import { RequiredIf } from "src/app/decorators/custom-validator";
 import { CreateLessonDto } from "./create-lesson.dto";
 import { LessonContentType } from "src/app/enums/common.enum";
@@ -17,4 +17,9 @@ export class UpdateLessonDto extends CreateLessonDto {
   @IsNotEmpty()
   @RequiredIf((obj: UpdateLessonDto) => [VIDEO, DOCUMENT].includes(obj.contentType))
   fileName: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @RequiredIf((obj: UpdateLessonDto) => obj.contentType === VIDEO)
+  duration: number;
 }

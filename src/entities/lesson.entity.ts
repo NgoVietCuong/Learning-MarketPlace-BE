@@ -33,6 +33,9 @@ export class Lesson {
   fileName: string;
 
   @Column()
+  duration: number;
+
+  @Column()
   sortOrder: number;
 
   @Column()
