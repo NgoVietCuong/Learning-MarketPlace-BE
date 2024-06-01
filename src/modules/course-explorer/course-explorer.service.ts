@@ -37,7 +37,6 @@ export class CourseExplorerService extends BaseService {
 
     let hasEnrolled = false;
     if (userId) {
-      console.log("userId", userId)
       const enrollment = await this.enrollmentRepo.findOneBy({ userId, courseId: course.id });
       hasEnrolled = !!enrollment;
     }
