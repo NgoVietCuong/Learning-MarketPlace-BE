@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Validate } from 'class-validator';
 import { PaginationDtoConstant } from 'src/app/constants/pagination-dto.constant';
@@ -12,6 +13,7 @@ export class ListReviewsDto extends PaginationDtoConstant {
 
   @IsNumber()
   @IsOptional()
+  @Type(() => Number)
   @ApiPropertyOptional()
   rating: number;
 }

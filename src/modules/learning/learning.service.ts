@@ -95,7 +95,7 @@ export class LearningService extends BaseService {
     }
   }
 
-  async getCourseInfo(slug: string, userId: number) {
+  async getLearningProgress(slug: string, userId: number) {
     const course = await this.courseRepo
       .createQueryBuilder('C')
       .leftJoin('C.sections', 'S')

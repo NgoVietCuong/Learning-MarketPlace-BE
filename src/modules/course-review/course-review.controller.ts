@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Patch, Post, Param, UseGuards, Query, Delete } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/app/decorators/public';
 import { AllowAccess } from 'src/app/decorators/allow-access';
 import { Roles } from 'src/app/enums/common.enum';
 import { RoleGuard } from 'src/app/guards/role.guard';
@@ -28,6 +29,7 @@ export class CourseReviewController {
     return this.courseReviewService.updateReview(body, reviewId);
   }
 
+  @Public()
   @ApiOperation({ summary: 'Get list reviews' })
   @Get('/list')
   async getlistReviews(@Query() query: ListReviewsDto) {
