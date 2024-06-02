@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { ChangeInstructorPictureDto } from './dto/change-instructor-picture.dto';
@@ -11,6 +12,7 @@ import { CourseReviewService } from '../course-review/course-review.service';
 @Injectable()
 export class InstructorService extends BaseService {
   constructor(
+    private readonly trans: I18nService,
     private courseReviewService: CourseReviewService,
     @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
@@ -45,6 +47,9 @@ export class InstructorService extends BaseService {
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
       .getOne();
 
+    if (!profile)
+      throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor' } }));
+
     const courses = profile.courses;
     const courseIds = courses.map((c) => c.id);
 
@@ -55,6 +60,6 @@ export class InstructorService extends BaseService {
       .getCount();
     const totalReviews = await this.courseReviewService.getTotalReviews(courseIds);
     const averageRating = await this.courseReviewService.getAverageRating(courseIds);
-    return this.responseOk({ profile, totalStudents, totalReviews, averageRating: averageRating.rating });
+    return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: averageRating.rating });
   }
 }
