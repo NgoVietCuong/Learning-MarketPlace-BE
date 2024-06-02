@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
 import { CourseReviewService } from '../course-review/course-review.service';
 import { Course } from 'src/entities/course.entity';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Enrollment } from 'src/entities/enrollment.entity';
 
 @Injectable()
@@ -31,6 +31,8 @@ export class CourseExplorerService extends BaseService {
       .select(['C', 'P', 'S', 'L.id', 'L.title', 'L.contentType', 'L.duration']);
 
     const course = await queryBuilder.getOne();
+    if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
+
     const totalStudents = await this.enrollmentRepo.countBy({ courseId: course.id });
     const totalReviews = await this.courseReviewService.getTotalReviews([course.id]);
     const averageRating = await this.courseReviewService.getAverageRating([course.id]);
