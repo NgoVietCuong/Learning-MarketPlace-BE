@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AllowAccess } from 'src/app/decorators/allow-access';
 import { Roles } from 'src/app/enums/common.enum';
@@ -32,5 +32,11 @@ export class LearningController {
   @Put('update-progress')
   async updateProgress(@Body() body: UpdateProgressDto) {
     return this.learningService.updateProgress(body);
+  }
+
+  @ApiOperation({ summary: 'Get lesson details and learning progress' })
+  @Get('/:slug')
+  async getCourseInfo(@Param('slug') slug: string, @User('id') id: number) {
+    return this.learningService.getCourseInfo(slug, id);
   }
 }

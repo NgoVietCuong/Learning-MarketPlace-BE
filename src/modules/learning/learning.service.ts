@@ -1,5 +1,5 @@
 import { I18nService } from 'nestjs-i18n';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { BaseService } from '../base/base.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Enrollment } from 'src/entities/enrollment.entity';
@@ -9,6 +9,8 @@ import { UpdateProgressDto } from './dto/update-progress.dto';
 import { LessonProgress } from 'src/entities/lesson-progress.entity';
 import { Lesson } from 'src/entities/lesson.entity';
 import { LessonContentType } from 'src/app/enums/common.enum';
+import { Course } from 'src/entities/course.entity';
+import { Section } from 'src/entities/section.entity';
 
 @Injectable()
 export class LearningService extends BaseService {
@@ -18,6 +20,8 @@ export class LearningService extends BaseService {
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
     @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
     @InjectRepository(LessonProgress) private lessonProgressRepo: Repository<LessonProgress>,
+    @InjectRepository(Course) private courseRepo: Repository<Course>,
+    @InjectRepository(Section) private sectionRepo: Repository<Section>,
   ) {
     super();
   }
@@ -79,7 +83,7 @@ export class LearningService extends BaseService {
       const [data, completedLessons] = totalCompletedLessons;
       const progressStatus = Math.round((completedLessons / totalLessons) * 100);
       await queryRunner.manager.update(Enrollment, { id: enrollmentId }, { progressStatus });
-      
+
       await queryRunner.commitTransaction();
       return this.responseOk();
     } catch (e) {
@@ -89,5 +93,34 @@ export class LearningService extends BaseService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getCourseInfo(slug: string, userId: number) {
+    const course = await this.courseRepo
+      .createQueryBuilder('C')
+      .leftJoin('C.sections', 'S')
+      .leftJoin('S.lessons', 'L')
+      .leftJoin('L.lessonProgress', 'LP')
+      .where('C.isPublished = :isPublished', { isPublished: true })
+      .andWhere('C.slug = :slug', { slug })
+      .andWhere('L.isPublished = :isPublished', { isPublished: true })
+      .orderBy('S.sortOrder', 'ASC')
+      .addOrderBy('L.sortOrder', 'ASC')
+      .select(['C', 'S', 'L', 'LP'])
+      .getOne();
+
+    if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
+
+    const currentLesson = await this.lessonRepo
+      .createQueryBuilder('L')
+      .leftJoin('L.lessonProgress', 'LP')
+      .leftJoin('LP.enrollment', 'E')
+      .where('E.userId = :userId', { userId })
+      .andWhere('E.courseId = :courseId', { courseId: course.id })
+      .orderBy('LP.updatedAt', 'DESC')
+      .select(['L', 'LP.contentProgress'])
+      .getOne();
+
+    return this.responseOk({ ...course, currentLesson });
   }
 }
