@@ -26,6 +26,7 @@ export class CourseExplorerService extends BaseService {
       .leftJoin('S.lessons', 'L')
       .where('C.slug = :slug', { slug })
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .andWhere('L.isPublished = :isPublished', { isPublished: true })
       .orderBy('S.sortOrder', 'ASC')
       .addOrderBy('L.sortOrder', 'ASC')
       .select(['C', 'P', 'S', 'L.id', 'L.title', 'L.contentType', 'L.duration']);
