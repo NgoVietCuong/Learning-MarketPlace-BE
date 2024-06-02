@@ -3,7 +3,6 @@ import { Review } from 'src/entities/review.entity';
 import { BaseService } from '../base/base.service';
 import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Enrollment } from 'src/entities/enrollment.entity';
 import { Repository } from 'typeorm';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -44,8 +43,10 @@ export class CourseReviewService extends BaseService {
     const queryBuilder = this.reviewRepo
       .createQueryBuilder('R')
       .innerJoin('R.enrollment', 'E')
+      .innerJoin('E.user', 'U')
       .innerJoin('E.course', 'C')
-      .where('C.slug = :slug', { slug });
+      .where('C.slug = :slug', { slug })
+      .select(['R', 'E.id', 'U.username', 'U.avatar']);
 
     if (rating) queryBuilder.andWhere('R.rating = :rating', { rating });
     queryBuilder.orderBy('R.updatedAt', 'DESC');
