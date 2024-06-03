@@ -60,7 +60,13 @@ export class CourseReviewService extends BaseService {
       .innerJoin('R.enrollment', 'E')
       .innerJoin('E.course', 'C')
       .where('C.id IN (:...courseIds)', { courseIds })
-      .select('ROUND((CAST(SUM(R.rating) AS FLOAT) / CAST(COUNT(R.id) AS FLOAT))::numeric, 1)', 'rating')
+      .select(
+        `case
+          when COUNT(R.id) = 0 then 0
+          else ROUND((CAST(SUM(R.rating) AS FLOAT) / CAST(COUNT(R.id) AS FLOAT))::numeric, 1)
+        end`,
+        'rating'
+      )
       .getRawOne();
     
     return averageRating;
