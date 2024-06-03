@@ -18,6 +18,7 @@ import { InstructorModule } from './instructor/instructor.module';
 import { CategoryModule } from './category/category.module';
 import { CourseReviewModule } from './course-review/course-review.module';
 import { CourseExplorerModule } from './course-explorer/course-explorer.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { CourseExplorerModule } from './course-explorer/course-explorer.module';
     CategoryModule,
     CourseReviewModule,
     CourseExplorerModule,
+    AdminModule,
   ],
   providers: [
     {
