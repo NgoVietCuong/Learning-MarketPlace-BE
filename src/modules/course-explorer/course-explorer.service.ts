@@ -33,8 +33,18 @@ export class CourseExplorerService extends BaseService {
     const course = await queryBuilder.getOne();
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
 
+    const totalVideoDuration = await this.courseRepo
+      .createQueryBuilder('C')
+      .leftJoin('C.sections', 'S')
+      .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
+      .where('C.slug = :slug', { slug })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .groupBy('C.id')
+      .select('SUM(COALESCE(L.duration, 0))', 'test')
+      .getRawOne();
+    console.log('totalVideoDuration', totalVideoDuration);
     const totalStudents = await this.enrollmentRepo.countBy({ courseId: course.id });
-    const totalReviews = await this.courseReviewService.getTotalReviews([course.id]);
+    const { totalReviews, numberEachRatings } = await this.courseReviewService.getTotalReviews([course.id]);
     const averageRating = await this.courseReviewService.getAverageRating([course.id]);
 
     let hasEnrolled = false;
@@ -48,6 +58,7 @@ export class CourseExplorerService extends BaseService {
       hasEnrolled,
       totalStudents,
       totalReviews,
+      numberEachRatings,
       averageRating: averageRating.rating,
     });
   }

@@ -65,21 +65,41 @@ export class CourseReviewService extends BaseService {
           when COUNT(R.id) = 0 then 0
           else ROUND((CAST(SUM(R.rating) AS FLOAT) / CAST(COUNT(R.id) AS FLOAT))::numeric, 1)
         end`,
-        'rating'
+        'rating',
       )
       .getRawOne();
-    
+
     return averageRating;
   }
 
   async getTotalReviews(courseIds: number[]) {
-    const totalRatings = await this.reviewRepo
+    const totalReviews= await this.reviewRepo
       .createQueryBuilder('R')
       .innerJoin('R.enrollment', 'E')
       .innerJoin('E.course', 'C')
       .where('C.id IN (:...courseIds)', { courseIds })
       .getCount();
 
-    return totalRatings;
+    const countEachRate = await this.reviewRepo
+      .createQueryBuilder('R')
+      .leftJoin('R.enrollment', 'E')
+      .innerJoin('E.course', 'C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .groupBy('R.rating')
+      .select('R.rating', 'rate')
+      .addSelect('COUNT(R.id)', 'count')
+      .orderBy('R.rating')
+      .getRawMany();
+
+    const ratings = Array.from({ length: 5 }, (_, i) => ({ rate: i + 1, count: 0 }));
+    const numberEachRatings = countEachRate.reduce((acc, curr) => {
+      const ratingIndex = acc.findIndex((item) => item.rate === curr.rate);
+      if (ratingIndex !== -1) {
+        acc[ratingIndex].count = curr.count;
+      }
+      return acc;
+    }, ratings);
+
+    return { totalReviews, numberEachRatings };
   }
 }
