@@ -6,6 +6,7 @@ import { CourseReviewService } from '../course-review/course-review.service';
 import { Course } from 'src/entities/course.entity';
 import { Repository } from 'typeorm';
 import { Enrollment } from 'src/entities/enrollment.entity';
+import { LessonContentType } from 'src/app/enums/common.enum';
 
 @Injectable()
 export class CourseExplorerService extends BaseService {
@@ -33,16 +34,25 @@ export class CourseExplorerService extends BaseService {
     const course = await queryBuilder.getOne();
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
 
-    const totalVideoDuration = await this.courseRepo
+    const videoDuration = await this.courseRepo
       .createQueryBuilder('C')
       .leftJoin('C.sections', 'S')
       .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
       .where('C.slug = :slug', { slug })
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
-      .groupBy('C.id')
-      .select('SUM(COALESCE(L.duration, 0))', 'test')
+      .select('SUM(COALESCE(L.duration, 0))', 'totalSeconds')
       .getRawOne();
-    console.log('totalVideoDuration', totalVideoDuration);
+
+    const lessonArticles = await this.courseRepo
+      .createQueryBuilder('C')
+      .leftJoin('C.sections', 'S')
+      .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
+      .where('C.slug = :slug', { slug })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .andWhere('L.contentType IN (:...contentTypes)', { contentTypes: [LessonContentType.DOCUMENT, LessonContentType.TEXT]})
+      .select('COUNT(L.id)', 'totalArticles')
+      .getRawOne();
+
     const totalStudents = await this.enrollmentRepo.countBy({ courseId: course.id });
     const { totalReviews, numberEachRatings } = await this.courseReviewService.getTotalReviews([course.id]);
     const averageRating = await this.courseReviewService.getAverageRating([course.id]);
@@ -53,11 +63,21 @@ export class CourseExplorerService extends BaseService {
       hasEnrolled = !!enrollment;
     }
 
+    let totalVideoDuration = '';
+    if (videoDuration && videoDuration.totalSeconds) {
+      const hours = Math.floor(parseInt(videoDuration.totalSeconds) / 3600);
+      const minutes = Math.ceil((parseInt(videoDuration.totalSeconds) % 3600) / 60);
+      totalVideoDuration += hours ? `${hours} hours`: '';
+      totalVideoDuration += minutes ? `${minutes} minutes` : '';
+    }
+
     return this.responseOk({
       ...course,
       hasEnrolled,
       totalStudents,
       totalReviews,
+      totalVideoDuration,
+      totalArticles: lessonArticles ? lessonArticles.totalArticles : 0,
       numberEachRatings,
       averageRating: averageRating.rating,
     });
