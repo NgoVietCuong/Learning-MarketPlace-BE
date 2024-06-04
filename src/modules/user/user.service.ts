@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
@@ -10,6 +10,7 @@ import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { Roles } from 'src/app/enums/common.enum';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ChangeAvatarDto } from './dto/change-avatar.dto';
+import { ListUsersDto } from '../admin/dto/list-users.dto';
 
 @Injectable()
 export class UserService extends BaseService {
@@ -63,6 +64,25 @@ export class UserService extends BaseService {
       await this.instructorProfileRepo.save({ userId });
     }
     return this.responseOk();
+  }
+
+  async getListUsers(query: ListUsersDto) {
+    const { page, limit, search, isActive, roleId } = query;
+    const queryBuilder = this.userRepo.createQueryBuilder('U').leftJoinAndSelect('U.roles', 'R');
+    if (roleId) queryBuilder.andWhere('R.id = :roleId', { roleId });
+    if (isActive) queryBuilder.andWhere('U.isActive = :isActive', { isActive });
+    if (search)
+      queryBuilder.andWhere(
+        new Brackets((subQ) => {
+          subQ
+            .where(this.searchCaseInsensitive('U.username'), { keyword: `%${search}%` })
+            .orWhere(this.searchCaseInsensitive('U.email'), { keyword: `%${search}%` });
+        }),
+      );
+
+    queryBuilder.orderBy('U.updatedAt', 'DESC');
+    const users = await this.customPaginate<User>(queryBuilder, page, limit);
+    return users;
   }
 
   async create(data) {
