@@ -80,6 +80,7 @@ export class BaseService {
     string: string,
     repository: any,
     column: string,
+    exceptId: number = null,
     options: { replacement: string; remove: RegExp; lower: boolean; strict: boolean; locale: string; trim: boolean } = {
       replacement: '-',
       remove: undefined,
@@ -90,7 +91,11 @@ export class BaseService {
     },
   ) {
     let slug = slugify(string, options);
-    const result = await repository.createQueryBuilder('table').where(`table.${column} = :slug`, { slug }).getOne();
+    const queryBuilder = repository.createQueryBuilder('table').where(`table.${column} = :slug`, { slug });
+    if (exceptId) {
+      queryBuilder.andWhere('table.id <> :exceptId', { exceptId });
+    }
+    const result = await queryBuilder.getOne();
 
     if (result) slug += `${options.replacement}${Date.now()}`;
     return slug;
