@@ -34,9 +34,17 @@ export class LearningController {
     return this.learningService.updateProgress(body);
   }
 
-  @ApiOperation({ summary: 'Get course learning progress' })
-  @Get('/:slug')
-  async getCourseEnrollment(@Param('slug') slug: string, @User('id') id: number) {
-    return this.learningService.getCourseEnrollment(slug, id);
+  @ApiOperation({ summary: 'Get lesson progress' })
+  @Get('lesson/:lessonId')
+  async getLessonProgress(@Param('lessonId') lessonId: number, @User('id') id: number) {
+    return this.learningService.getLessonProgress(lessonId, id)
   }
+
+  @ApiOperation({ summary: 'Get course learning progress' })
+  @Get('course/:slug')
+  async getCourseProgress(@Param('slug') slug: string, @User('id') id: number) {
+    return this.learningService.getCourseProgress(slug, id);
+  }
+
+
 }

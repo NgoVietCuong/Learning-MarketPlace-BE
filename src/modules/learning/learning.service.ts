@@ -95,7 +95,20 @@ export class LearningService extends BaseService {
     }
   }
 
-  async getCourseEnrollment(slug: string, userId: number) {
+  async getLessonProgress(lessonId: number, userId: number) {
+    const lessonProgress = await this.lessonRepo
+      .createQueryBuilder('L')
+      .leftJoin('L.lessonProgress', 'LP')
+      .leftJoin('LP.enrollment', 'E', 'E.userId = :userId', { userId })
+      .where('L.id = :lessonId', { lessonId })
+      .andWhere('L.isPublished = :isPublished', { isPublished: true })
+      .select(['L', 'LP'])
+      .getOne();
+
+    return this.responseOk(lessonProgress);
+  }
+
+  async getCourseProgress(slug: string, userId: number) {
     const enrollment = await this.enrollmentRepo
       .createQueryBuilder('E')
       .innerJoin('E.course', 'C')
@@ -112,18 +125,18 @@ export class LearningService extends BaseService {
       .select(['E', 'C', 'S', 'L', 'LP', 'R'])
       .getOne();
 
-    let currentLesson;
-    if (enrollment) {
-      currentLesson = await this.lessonRepo
-        .createQueryBuilder('L')
-        .leftJoin('L.lessonProgress', 'LP')
-        .leftJoin('LP.enrollment', 'E')
-        .where('E.id = :id', { id: enrollment.id })
-        .orderBy('LP.updatedAt', 'DESC')
-        .select(['L', 'LP.contentProgress'])
-        .getOne();
-    }
+    if (!enrollment)
+      throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Enrollment' } }));
 
-    return this.responseOk({ ...enrollment, currentLesson });
+    const currentLesson = await this.lessonRepo
+      .createQueryBuilder('L')
+      .leftJoin('L.lessonProgress', 'LP')
+      .leftJoin('LP.enrollment', 'E')
+      .where('E.id = :id', { id: enrollment.id })
+      .orderBy('LP.updatedAt', 'DESC')
+      .select(['L', 'LP.contentProgress'])
+      .getOne();
+
+    return this.responseOk(enrollment);
   }
 }
