@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
 import { CourseReviewService } from '../course-review/course-review.service';
+import { Lesson } from 'src/entities/lesson.entity';
 import { Course } from 'src/entities/course.entity';
 import { Repository } from 'typeorm';
 import { Enrollment } from 'src/entities/enrollment.entity';
@@ -13,6 +14,7 @@ export class CourseExplorerService extends BaseService {
   constructor(
     private readonly trans: I18nService,
     private courseReviewService: CourseReviewService,
+    @InjectRepository(Lesson) private lessonRepo: Repository<Lesson>,
     @InjectRepository(Course) private courseRepo: Repository<Course>,
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
   ) {
@@ -53,6 +55,29 @@ export class CourseExplorerService extends BaseService {
       .select('COUNT(L.id)', 'totalArticles')
       .getRawOne();
 
+    let currentLesson = await this.lessonRepo
+      .createQueryBuilder('L')
+      .leftJoin('L.lessonProgress', 'LP')
+      .leftJoin('LP.enrollment', 'E')
+      .where('E.courseId = :courseId AND E.userId = :userId', { courseId: course.id, userId })
+      .andWhere('L.isPublished = :isPublished', { isPublished: true })
+      .orderBy('LP.updatedAt', 'DESC')
+      .select(['L.id'])
+      .getOne();
+
+    if (!currentLesson) {
+      currentLesson = await this.lessonRepo
+        .createQueryBuilder('L')
+        .leftJoin('L.section', 'S')
+        .leftJoin('S.course', 'C')
+        .where('C.id = :courseId', { courseId: course.id })
+        .andWhere('L.isPublished = :isPublished', { isPublished: true })
+        .orderBy('S.sortOrder', 'ASC')
+        .orderBy('L.sortOrder', 'ASC')
+        .select(['L.id'])
+        .getOne();
+    }
+
     const totalStudents = await this.enrollmentRepo.countBy({ courseId: course.id });
     const { totalReviews, numberEachRatings } = await this.courseReviewService.getTotalReviews([course.id]);
     const averageRating = await this.courseReviewService.getAverageRating([course.id]);
@@ -80,6 +105,7 @@ export class CourseExplorerService extends BaseService {
       totalArticles: lessonArticles ? lessonArticles.totalArticles : 0,
       numberEachRatings,
       averageRating: averageRating.rating,
+      currentLesson,
     });
   }
 }
