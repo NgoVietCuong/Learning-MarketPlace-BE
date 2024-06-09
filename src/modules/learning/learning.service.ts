@@ -57,6 +57,7 @@ export class LearningService extends BaseService {
       .leftJoin('S.course', 'C')
       .innerJoin('C.enrollments', 'E')
       .where('E.id = :id', { id: enrollmentId })
+      .where('L.isPublished = :isPublished', { isPublished: true })
       .getCount();
 
     let isCompleted = false;
