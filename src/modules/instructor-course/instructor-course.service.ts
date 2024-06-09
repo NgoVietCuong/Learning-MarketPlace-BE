@@ -84,7 +84,7 @@ export class InstructorCourseService extends BaseService {
     let course = await this.getCourse(courseId, userId);
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
 
-    const slug = await this.generateSlug(body.title, this.courseRepo, 'slug');
+    const slug = await this.generateSlug(body.title, this.courseRepo, 'slug', courseId);
     const categories = await this.categoryRepo.findBy({ id: In(categoryIds) });
     course = Object.assign(course, { ...properties, slug, categories });
     await this.courseRepo.save(course);

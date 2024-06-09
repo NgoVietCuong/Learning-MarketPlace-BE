@@ -8,6 +8,7 @@ import { Course } from 'src/entities/course.entity';
 import { Repository } from 'typeorm';
 import { Enrollment } from 'src/entities/enrollment.entity';
 import { LessonContentType } from 'src/app/enums/common.enum';
+import { SearchCourseDto } from './dto/search-course.dto';
 
 @Injectable()
 export class CourseExplorerService extends BaseService {
@@ -107,5 +108,22 @@ export class CourseExplorerService extends BaseService {
       averageRating: averageRating.rating,
       currentLesson,
     });
+  }
+
+  async searchCourse(query: SearchCourseDto) {
+    const { page, limit, search, categoryId, level, price } = query;
+    const queryBuilder = this.courseRepo
+      .createQueryBuilder('C')
+      .where('C.isPublished = :isPublished', { isPublished: true });
+
+    if (categoryId) queryBuilder.leftJoin('C.categories', 'CTG').andWhere('CTG.id = :id', { id: categoryId });
+    if (level) queryBuilder.andWhere('C.level = :level', { level });
+    if (price === 'Free') queryBuilder.andWhere('C.price = :price', { price: 0 });
+    if (price === 'Paid') queryBuilder.andWhere('C.price > :price', { price: 0 });
+    if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` });
+    
+    queryBuilder.orderBy('C.updatedAt', 'DESC');
+    const courses = await this.customPaginate<Course>(queryBuilder, page, limit);
+    return this.responseOk(courses);
   }
 }
