@@ -57,11 +57,11 @@ export class LearningService extends BaseService {
       .leftJoin('S.course', 'C')
       .innerJoin('C.enrollments', 'E')
       .where('E.id = :id', { id: enrollmentId })
+      .where('L.isPublished = :isPublished', { isPublished: true })
       .getCount();
 
     let isCompleted = false;
-    if (lesson.contentType !== LessonContentType.VIDEO) isCompleted = true;
-    else if (contentProgress > 80) isCompleted = true;
+    if (contentProgress > 80) isCompleted = true;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -95,32 +95,39 @@ export class LearningService extends BaseService {
     }
   }
 
-  async getLearningProgress(slug: string, userId: number) {
-    const course = await this.courseRepo
-      .createQueryBuilder('C')
+  async getLessonProgress(lessonId: number, userId: number) {
+    const lessonProgress = await this.lessonRepo
+      .createQueryBuilder('L')
+      .leftJoin('L.lessonProgress', 'LP')
+      .leftJoin('LP.enrollment', 'E', 'E.userId = :userId', { userId })
+      .where('L.id = :lessonId', { lessonId })
+      .andWhere('L.isPublished = :isPublished', { isPublished: true })
+      .select(['L', 'LP'])
+      .getOne();
+
+    return this.responseOk(lessonProgress);
+  }
+
+  async getCourseProgress(slug: string, userId: number) {
+    const enrollment = await this.enrollmentRepo
+      .createQueryBuilder('E')
+      .innerJoin('E.course', 'C')
       .leftJoin('C.sections', 'S')
       .leftJoin('S.lessons', 'L')
       .leftJoin('L.lessonProgress', 'LP')
-      .where('C.isPublished = :isPublished', { isPublished: true })
-      .andWhere('C.slug = :slug', { slug })
+      .leftJoin('E.review', 'R')
+      .where('C.slug = :slug', { slug })
+      .andWhere('E.userId = :userId', { userId })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
       .andWhere('L.isPublished = :isPublished', { isPublished: true })
       .orderBy('S.sortOrder', 'ASC')
       .addOrderBy('L.sortOrder', 'ASC')
-      .select(['C', 'S', 'L', 'LP'])
+      .select(['E', 'C', 'S', 'L', 'LP', 'R'])
       .getOne();
 
-    if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
+    if (!enrollment)
+      throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Enrollment' } }));
 
-    const currentLesson = await this.lessonRepo
-      .createQueryBuilder('L')
-      .leftJoin('L.lessonProgress', 'LP')
-      .leftJoin('LP.enrollment', 'E')
-      .where('E.userId = :userId', { userId })
-      .andWhere('E.courseId = :courseId', { courseId: course.id })
-      .orderBy('LP.updatedAt', 'DESC')
-      .select(['L', 'LP.contentProgress'])
-      .getOne();
-
-    return this.responseOk({ ...course, currentLesson });
+    return this.responseOk(enrollment);
   }
 }
