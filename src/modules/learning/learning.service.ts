@@ -61,8 +61,7 @@ export class LearningService extends BaseService {
       .getCount();
 
     let isCompleted = false;
-    if (lesson.contentType === LessonContentType.TEXT) isCompleted = true;
-    else if (contentProgress > 80) isCompleted = true;
+    if (contentProgress > 80) isCompleted = true;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

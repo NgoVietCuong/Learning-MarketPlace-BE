@@ -51,7 +51,7 @@ export class CourseExplorerService extends BaseService {
       .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
       .where('C.slug = :slug', { slug })
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
-      .andWhere('L.contentType IN (:...contentTypes)', { contentTypes: [LessonContentType.DOCUMENT, LessonContentType.TEXT]})
+      .andWhere('L.contentType IN (:...contentTypes)', { contentTypes: [LessonContentType.DOCUMENT]})
       .select('COUNT(L.id)', 'totalArticles')
       .getRawOne();
 
