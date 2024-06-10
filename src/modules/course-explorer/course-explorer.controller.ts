@@ -18,6 +18,7 @@ export class CourseExplorerController {
     return this.courseExplorerService.searchCourse(query);
   }
 
+  @UseGuards(RoleGuard)
   @ApiOperation({ summary: 'Get course by slug' })
   @Get('/:slug')
   async getCourse(@User('id') id: number, @Param('slug') slug: string) {
