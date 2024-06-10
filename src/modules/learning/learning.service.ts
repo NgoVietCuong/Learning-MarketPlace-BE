@@ -50,7 +50,6 @@ export class LearningService extends BaseService {
   async updateProgress(body: UpdateProgressDto) {
     const { enrollmentId, lessonId, contentProgress } = body;
     let lessonProgress = await this.lessonProgressRepo.findOneBy({ enrollmentId, lessonId });
-    const lesson = await this.lessonRepo.findOneBy({ id: lessonId });
     const totalLessons = await this.lessonRepo
       .createQueryBuilder('L')
       .leftJoin('L.section', 'S')

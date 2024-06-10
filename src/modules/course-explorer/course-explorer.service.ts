@@ -74,7 +74,7 @@ export class CourseExplorerService extends BaseService {
         .where('C.id = :courseId', { courseId: course.id })
         .andWhere('L.isPublished = :isPublished', { isPublished: true })
         .orderBy('S.sortOrder', 'ASC')
-        .orderBy('L.sortOrder', 'ASC')
+        .addOrderBy('L.sortOrder', 'ASC')
         .select(['L.id'])
         .getOne();
     }
