@@ -37,7 +37,7 @@ export class LearningController {
   @ApiOperation({ summary: 'Get lesson progress' })
   @Get('lesson/:lessonId')
   async getLessonProgress(@Param('lessonId') lessonId: number, @User('id') id: number) {
-    return this.learningService.getLessonProgress(lessonId, id)
+    return this.learningService.getLessonProgress(lessonId, id);
   }
 
   @ApiOperation({ summary: 'Get course learning progress' })
@@ -45,6 +45,4 @@ export class LearningController {
   async getCourseProgress(@Param('slug') slug: string, @User('id') id: number) {
     return this.learningService.getCourseProgress(slug, id);
   }
-
-
 }
