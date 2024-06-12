@@ -40,11 +40,18 @@ export class LearningService extends BaseService {
   async getMyCourseList(userId: number) {
     const myCourses = await this.enrollmentRepo
       .createQueryBuilder('E')
-      .leftJoinAndSelect('E.course', 'C')
+      .leftJoin('E.course', 'C')
+      .leftJoin('E.review', 'R')
+      .leftJoin('C.profile', 'P')
       .where('E.userId = :userId', { userId })
       .orderBy('E.updatedAt', 'DESC')
+      .select(['E', 'C', 'P.displayName', 'R'])
       .getMany();
-    return this.responseOk(myCourses);
+
+    const inProgressCourses = myCourses.filter((course) => course.progressStatus < 100);
+    const completedCourses = myCourses.filter((course) => course.progressStatus === 100);
+
+    return this.responseOk({ inProgressCourses, completedCourses });
   }
 
   async updateProgress(body: UpdateProgressDto) {
