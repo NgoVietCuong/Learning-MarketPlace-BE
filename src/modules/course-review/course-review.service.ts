@@ -110,7 +110,7 @@ export class CourseReviewService extends BaseService {
       .leftJoin('E.course', 'C')
       .where('E.courseId IN (:...courseIds)', { courseIds })
       .groupBy('E.courseId')
-      .select('E.courseId as courseId')
+      .select('E.courseId', 'courseId')
       .addSelect(
         `case
           when COUNT(R.id) = 0 then 0
@@ -130,7 +130,7 @@ export class CourseReviewService extends BaseService {
       .innerJoin('E.course', 'C')
       .where('E.courseId IN (:...courseIds)', { courseIds })
       .groupBy('E.courseId')
-      .select('E.courseId as courseId')
+      .select('E.courseId', 'courseId')
       .addSelect('COUNT(R.id)', 'totalReviews')
       .getRawMany()
     

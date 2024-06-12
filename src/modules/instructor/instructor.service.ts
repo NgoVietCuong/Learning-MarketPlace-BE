@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
 import { CourseReviewService } from '../course-review/course-review.service';
+import { CourseExplorerService } from '../course-explorer/course-explorer.service';
 import { Enrollment } from 'src/entities/enrollment.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { ChangeInstructorPictureDto } from './dto/change-instructor-picture.dto';
@@ -14,6 +15,7 @@ export class InstructorService extends BaseService {
   constructor(
     private readonly trans: I18nService,
     private courseReviewService: CourseReviewService,
+    private courseExplorerService: CourseExplorerService,
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
     @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
   ) {
@@ -51,26 +53,45 @@ export class InstructorService extends BaseService {
     if (!profile) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor' } }));
 
     const courses = profile.courses;
-    const courseIds = courses.map((c) => c.id);
+    const courseIds = courses.map((course) => course.id);
 
-    const totalStudents = await this.enrollmentRepo
-      .createQueryBuilder('E')
-      .leftJoin('E.course', 'C')
-      .where('C.id IN (:...courseIds)', { courseIds })
-      .getCount();
+    let totalStudents = 0, averageRating = 0, totalReviews = 0;
+    if (courseIds.length) {
+      const totalStudents = await this.enrollmentRepo
+        .createQueryBuilder('E')
+        .leftJoin('E.course', 'C')
+        .where('C.id IN (:...courseIds)', { courseIds })
+        .getCount();
 
-    const { totalReviews } = await this.courseReviewService.getTotalReviews(courseIds);
-    const averageRating = await this.courseReviewService.getAverageRating(courseIds);
+      const { totalReviews } = await this.courseReviewService.getTotalReviews(courseIds);
+      const averageRating = await this.courseReviewService.getAverageRating(courseIds);
+      const videoDuration = await this.courseExplorerService.getVideoDuration(courseIds);
+      const numberArticles = await this.courseExplorerService.getNumberArticles(courseIds);
+      const averageRatingEachCourse = await this.courseReviewService.getMultipleAvarageRatings(courseIds);
+      const totalReviewsEachCourse = await this.courseReviewService.getMultipleTotalReviews(courseIds);
 
-    const averageRatingEachCourse = await this.courseReviewService.getMultipleAvarageRatings(courseIds);
-    const totalReviewsEachCourse = await this.courseReviewService.getMultipleTotalReviews(courseIds);
+      profile.courses.map((course) => {
+        let totalVideoDuration = '';
+        const courseVideoDuration = videoDuration.find((item) => item.courseId === course.id);
 
-    profile.courses.map((course) => {
-      course['totalReviews'] = totalReviewsEachCourse.find((item) => item.courseid === course.id)?.totalReviews || 0;
-      course['averageRating'] = averageRatingEachCourse.find((item) => item.courseid === course.id)?.rating || 0;
-      return course;
-    });
+        if (courseVideoDuration && courseVideoDuration.totalSeconds) {
+          const hours = Math.floor(parseInt(courseVideoDuration.totalSeconds) / 3600);
+          const minutes = Math.ceil((parseInt(courseVideoDuration.totalSeconds) % 3600) / 60);
+          totalVideoDuration += hours ? `${hours} hours` : '';
+          totalVideoDuration += minutes ? `${minutes} minutes` : '';
+        }
 
-    return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: averageRating.rating });
+        course['totalVideoDuration'] = totalVideoDuration;
+        course['totalArticles'] = numberArticles.find((item) => item.courseId === course.id)?.totalArticles || 0;
+        course['totalReviews'] = totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews || 0;
+        course['averageRating'] = averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating || 0;
+        
+        return course;
+      });
+
+      return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating })
+    }
+
+    return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating });
   }
 }
