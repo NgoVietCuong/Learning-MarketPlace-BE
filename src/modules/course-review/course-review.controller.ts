@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Param, UseGuards, Query, Delete } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Param, UseGuards, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/app/decorators/public';
 import { AllowAccess } from 'src/app/decorators/allow-access';

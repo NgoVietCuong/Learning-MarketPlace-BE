@@ -3,19 +3,19 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
+import { CourseReviewService } from '../course-review/course-review.service';
+import { Enrollment } from 'src/entities/enrollment.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { ChangeInstructorPictureDto } from './dto/change-instructor-picture.dto';
 import { ChangeInstructorProfileDto } from './dto/change-instructor-profile.dto';
-import { Enrollment } from 'src/entities/enrollment.entity';
-import { CourseReviewService } from '../course-review/course-review.service';
 
 @Injectable()
 export class InstructorService extends BaseService {
   constructor(
     private readonly trans: I18nService,
     private courseReviewService: CourseReviewService,
-    @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
+    @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
   ) {
     super();
   }
@@ -26,7 +26,8 @@ export class InstructorService extends BaseService {
   }
 
   async changeInstructorProfile(body: ChangeInstructorProfileDto, userId: number) {
-    const slug = await this.generateSlug(body.displayName, this.instructorProfileRepo, 'slug');
+    const profile = await this.instructorProfileRepo.findOneBy({ userId });
+    const slug = await this.generateSlug(body.displayName, this.instructorProfileRepo, 'slug', profile.id);
     await this.instructorProfileRepo.update({ userId }, { ...body, slug });
     return this.responseOk();
   }
@@ -47,8 +48,7 @@ export class InstructorService extends BaseService {
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
       .getOne();
 
-    if (!profile)
-      throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor' } }));
+    if (!profile) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor' } }));
 
     const courses = profile.courses;
     const courseIds = courses.map((c) => c.id);
@@ -58,8 +58,19 @@ export class InstructorService extends BaseService {
       .leftJoin('E.course', 'C')
       .where('C.id IN (:...courseIds)', { courseIds })
       .getCount();
-    const totalReviews = await this.courseReviewService.getTotalReviews(courseIds);
+
+    const { totalReviews } = await this.courseReviewService.getTotalReviews(courseIds);
     const averageRating = await this.courseReviewService.getAverageRating(courseIds);
+
+    const averageRatingEachCourse = await this.courseReviewService.getMultipleAvarageRatings(courseIds);
+    const totalReviewsEachCourse = await this.courseReviewService.getMultipleTotalReviews(courseIds);
+
+    profile.courses.map((course) => {
+      course['totalReviews'] = totalReviewsEachCourse.find((item) => item.courseid === course.id)?.totalReviews || 0;
+      course['averageRating'] = averageRatingEachCourse.find((item) => item.courseid === course.id)?.rating || 0;
+      return course;
+    });
+
     return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: averageRating.rating });
   }
 }
