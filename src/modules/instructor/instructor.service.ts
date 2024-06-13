@@ -84,12 +84,12 @@ export class InstructorService extends BaseService {
         course['totalVideoDuration'] = totalVideoDuration;
         course['totalArticles'] = Number(numberArticles.find((item) => item.courseId === course.id)?.totalArticles) || 0;
         course['totalReviews'] = Number(totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews) || 0;
-        course['averageRating'] = Number(averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating) || 0;
+        course['averageRating'] = averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating || '0.0';
         
         return course;
       });
 
-      return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: Number(averageRating.rating) || 0 })
+      return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: averageRating.rating || '0.0' })
     }
 
     return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating });
