@@ -87,9 +87,9 @@ export class CourseExplorerService extends BaseService {
       totalStudents,
       totalReviews,
       totalVideoDuration,
-      totalArticles: numberArticles.length ? numberArticles[0].totalArticles : 0,
+      totalArticles: numberArticles.length ? Number(numberArticles[0].totalArticles) : 0,
       numberEachRatings,
-      averageRating: averageRating.rating,
+      averageRating: Number(averageRating.rating) || 0,
       currentLesson,
     });
   }
@@ -128,9 +128,9 @@ export class CourseExplorerService extends BaseService {
         }
 
         course['totalVideoDuration'] = totalVideoDuration;
-        course['totalArticles'] = numberArticles.find((item) => item.courseId === course.id)?.totalArticles || 0;
-        course['averageRating'] = averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating || 0;
-        course['totalReviews'] = totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews || 0;
+        course['totalArticles'] = Number(numberArticles.find((item) => item.courseId === course.id)?.totalArticles) || 0;
+        course['averageRating'] = Number(averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating) || 0;
+        course['totalReviews'] = Number(totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews) || 0;
 
         return course;
       })
