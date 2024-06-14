@@ -13,7 +13,6 @@ export class ChangeInstructorProfileDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(50)
-  @MaxLength(1000)
   biography: string;
 
   @ApiPropertyOptional()

@@ -37,25 +37,6 @@ export class CourseExplorerService extends BaseService {
     const course = await queryBuilder.getOne();
     if (!course) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Course' } }));
 
-    const videoDuration = await this.courseRepo
-      .createQueryBuilder('C')
-      .leftJoin('C.sections', 'S')
-      .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
-      .where('C.slug = :slug', { slug })
-      .andWhere('C.isPublished = :isPublished', { isPublished: true })
-      .select('SUM(COALESCE(L.duration, 0))', 'totalSeconds')
-      .getRawOne();
-
-    const lessonArticles = await this.courseRepo
-      .createQueryBuilder('C')
-      .leftJoin('C.sections', 'S')
-      .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
-      .where('C.slug = :slug', { slug })
-      .andWhere('C.isPublished = :isPublished', { isPublished: true })
-      .andWhere('L.contentType IN (:...contentTypes)', { contentTypes: [LessonContentType.DOCUMENT]})
-      .select('COUNT(L.id)', 'totalArticles')
-      .getRawOne();
-
     let currentLesson = await this.lessonRepo
       .createQueryBuilder('L')
       .leftJoin('L.lessonProgress', 'LP')
@@ -89,11 +70,14 @@ export class CourseExplorerService extends BaseService {
       hasEnrolled = !!enrollment;
     }
 
+    const videoDuration = await this.getVideoDuration([course.id]);
+    const numberArticles = await this.getNumberArticles([course.id]);
+
     let totalVideoDuration = '';
-    if (videoDuration && videoDuration.totalSeconds) {
-      const hours = Math.floor(parseInt(videoDuration.totalSeconds) / 3600);
-      const minutes = Math.ceil((parseInt(videoDuration.totalSeconds) % 3600) / 60);
-      totalVideoDuration += hours ? `${hours} hours`: '';
+    if (videoDuration.length && videoDuration[0].totalSeconds) {
+      const hours = Math.floor(parseInt(videoDuration[0].totalSeconds) / 3600);
+      const minutes = Math.ceil((parseInt(videoDuration[0].totalSeconds) % 3600) / 60);
+      totalVideoDuration += hours ? `${hours} hours` : '';
       totalVideoDuration += minutes ? `${minutes} minutes` : '';
     }
 
@@ -103,9 +87,9 @@ export class CourseExplorerService extends BaseService {
       totalStudents,
       totalReviews,
       totalVideoDuration,
-      totalArticles: lessonArticles ? lessonArticles.totalArticles : 0,
+      totalArticles: numberArticles.length ? Number(numberArticles[0].totalArticles) : 0,
       numberEachRatings,
-      averageRating: averageRating.rating,
+      averageRating: averageRating.rating || '0.0',
       currentLesson,
     });
   }
@@ -121,9 +105,68 @@ export class CourseExplorerService extends BaseService {
     if (price === 'Free') queryBuilder.andWhere('C.price = :price', { price: 0 });
     if (price === 'Paid') queryBuilder.andWhere('C.price > :price', { price: 0 });
     if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` });
-    
+
     queryBuilder.orderBy('C.updatedAt', 'DESC');
     const courses = await this.customPaginate<Course>(queryBuilder, page, limit);
+
+    if (courses.items.length) {
+      const courseIds = courses.items.map((course) => course.id);
+      const videoDuration = await this.getVideoDuration(courseIds);
+      const numberArticles = await this.getNumberArticles(courseIds);
+      const totalReviewsEachCourse = await this.courseReviewService.getMultipleTotalReviews(courseIds);
+      const averageRatingEachCourse = await this.courseReviewService.getMultipleAvarageRatings(courseIds);
+
+      courses.items.map((course) => {
+        let totalVideoDuration = '';
+        const courseVideoDuration = videoDuration.find((item) => item.courseId === course.id);
+
+        if (courseVideoDuration && courseVideoDuration.totalSeconds) {
+          const hours = Math.floor(parseInt(courseVideoDuration.totalSeconds) / 3600);
+          const minutes = Math.ceil((parseInt(courseVideoDuration.totalSeconds) % 3600) / 60);
+          totalVideoDuration += hours ? `${hours} hours` : '';
+          totalVideoDuration += minutes ? `${minutes} minutes` : '';
+        }
+
+        course['totalVideoDuration'] = totalVideoDuration;
+        course['totalArticles'] = Number(numberArticles.find((item) => item.courseId === course.id)?.totalArticles) || 0;
+        course['averageRating'] = averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating || '0.0';
+        course['totalReviews'] = Number(totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews) || 0;
+
+        return course;
+      })
+    }
+
     return this.responseOk(courses);
+  }
+
+  async getVideoDuration(courseIds: number[]) {
+    const videoDuration = await this.courseRepo
+      .createQueryBuilder('C')
+      .leftJoin('C.sections', 'S')
+      .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .groupBy('C.id')
+      .select('C.id', 'courseId')
+      .addSelect('SUM(COALESCE(L.duration, 0))', 'totalSeconds')
+      .getRawMany();
+
+    return videoDuration;
+  }
+
+  async getNumberArticles(courseIds: number[]) {
+    const numberArticles = await this.courseRepo
+      .createQueryBuilder('C')
+      .leftJoin('C.sections', 'S')
+      .leftJoin('S.lessons', 'L', 'L.isPublished = :isPublished', { isPublished: true })
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .andWhere('L.contentType IN (:...contentTypes)', { contentTypes: [LessonContentType.DOCUMENT] })
+      .groupBy('C.id')
+      .select('C.id', 'courseId')
+      .addSelect('COUNT(L.id)', 'totalArticles')
+      .getRawMany();
+    
+    return numberArticles;
   }
 }

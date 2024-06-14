@@ -102,4 +102,38 @@ export class CourseReviewService extends BaseService {
 
     return { totalReviews, numberEachRatings };
   }
+
+  async getMultipleAvarageRatings(courseIds: number[]) {
+    const averageRatings = await this.reviewRepo
+      .createQueryBuilder('R')
+      .leftJoin('R.enrollment', 'E')
+      .leftJoin('E.course', 'C')
+      .where('E.courseId IN (:...courseIds)', { courseIds })
+      .groupBy('E.courseId')
+      .select('E.courseId', 'courseId')
+      .addSelect(
+        `case
+          when COUNT(R.id) = 0 then 0
+          else ROUND((CAST(SUM(R.rating) AS FLOAT) / CAST(COUNT(R.id) AS FLOAT))::numeric, 1)
+        end`,
+        'rating'
+      )
+      .getRawMany();
+
+    return averageRatings;
+  }
+
+  async getMultipleTotalReviews(courseIds: number[]) {
+    const totalReviews = await this.reviewRepo
+      .createQueryBuilder('R')
+      .innerJoin('R.enrollment', 'E')
+      .innerJoin('E.course', 'C')
+      .where('E.courseId IN (:...courseIds)', { courseIds })
+      .groupBy('E.courseId')
+      .select('E.courseId', 'courseId')
+      .addSelect('COUNT(R.id)', 'totalReviews')
+      .getRawMany()
+    
+    return totalReviews;
+  }
 }
