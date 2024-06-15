@@ -68,7 +68,11 @@ export class UserService extends BaseService {
 
   async getListUsers(query: ListUsersDto) {
     const { page, limit, search, isActive, roleId } = query;
-    const queryBuilder = this.userRepo.createQueryBuilder('U').leftJoinAndSelect('U.roles', 'R');
+    const queryBuilder = this.userRepo
+      .createQueryBuilder('U')
+      .leftJoinAndSelect('U.roles', 'R')
+      .where('R.code <> :code', { code: Roles.ADMIN });
+      
     if (roleId) queryBuilder.andWhere('R.id = :roleId', { roleId });
     if (isActive) queryBuilder.andWhere('U.isActive = :isActive', { isActive });
     if (search)
