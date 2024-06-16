@@ -16,6 +16,7 @@ import { Roles } from 'src/app/enums/common.enum';
 export class UserController {
   constructor(private userService: UserService) {}
 
+  @AllowAccess()
   @ApiOperation({ summary: 'Get user' })
   @Get()
   async getUser(@User('id') id: number) {
