@@ -98,6 +98,7 @@ export class CourseExplorerService extends BaseService {
     const { page, limit, search, categoryId, level, price } = query;
     const queryBuilder = this.courseRepo
       .createQueryBuilder('C')
+      .innerJoin('C.profile', 'P')
       .where('C.isPublished = :isPublished', { isPublished: true });
 
     if (categoryId) queryBuilder.leftJoin('C.categories', 'CTG').andWhere('CTG.id = :id', { id: categoryId });
@@ -106,7 +107,7 @@ export class CourseExplorerService extends BaseService {
     if (price === 'Paid') queryBuilder.andWhere('C.price > :price', { price: 0 });
     if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` });
 
-    queryBuilder.orderBy('C.updatedAt', 'DESC');
+    queryBuilder.select(['C', 'P.displayName']).orderBy('C.updatedAt', 'DESC');
     const courses = await this.customPaginate<Course>(queryBuilder, page, limit);
 
     if (courses.items.length) {
