@@ -15,6 +15,12 @@ import { Public } from 'src/app/decorators/public';
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
 
+  @ApiOperation({ summary: 'Get authorize url'})
+  @Get('/authorize')
+  async getAuthorizeUrl() {
+    return this.paymentService.getAuthorizeUrl();
+  }
+
   @ApiOperation({ summary: 'Create payment' })
   @Post('/create')
   async createPayment() {

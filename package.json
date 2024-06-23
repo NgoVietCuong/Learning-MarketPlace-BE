@@ -37,6 +37,7 @@
     "@nestjs/typeorm": "^10.0.2",
     "@paypal/checkout-server-sdk": "^1.0.3",
     "@types/cache-manager": "^4.0.6",
+    "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.2",
     "cache-manager": "^4.1.0",

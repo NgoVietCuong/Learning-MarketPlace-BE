@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import axios from 'axios';
 import * as paypal from '@paypal/checkout-server-sdk';
 import paypalConfiguration from 'src/config/paypal.config';
 
@@ -7,10 +8,73 @@ import paypalConfiguration from 'src/config/paypal.config';
 export class PaypalService {
   private readonly logger = new Logger(PaypalService.name);
   private client;
+  private environment;
 
   constructor(@Inject(paypalConfiguration.KEY) private paypalConfig: ConfigType<typeof paypalConfiguration>) {
-    const environment = new paypal.core.SandboxEnvironment(paypalConfig.clientId, paypalConfig.clientSecret);
-    this.client = new paypal.core.PayPalHttpClient(environment);
+    this.environment = new paypal.core.SandboxEnvironment(paypalConfig.clientId, paypalConfig.clientSecret);
+    this.client = new paypal.core.PayPalHttpClient(this.environment);
+  }
+
+  async createPartnerReferral() {
+    const accessToken = await this.getAccessToken();
+
+    const response = await axios.post(
+      `https://api-m.sandbox.paypal.com/v2/customer/partner-referrals`,
+      {
+        // Payload for the partner referral request
+        operations: [
+          {
+            operation: 'API_INTEGRATION',
+            api_integration_preference: {
+              rest_api_integration: {
+                integration_method: 'PAYPAL',
+                integration_type: 'THIRD_PARTY',
+                third_party_details: {
+                  features: ['PAYMENT', 'REFUND'],
+                },
+              },
+            },
+          },
+        ],
+        partner_config_override: {
+          return_url: 'https://youtube.com',
+          action_renewal_url: 'https://youtube.com',
+        },
+        products: ['PPCP'],
+        legal_consents: [
+          {
+            type: 'SHARE_DATA_CONSENT',
+            granted: true,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return response.data;
+  }
+
+  async getAccessToken() {
+    const response = await axios.post(
+      `https://api-m.sandbox.paypal.com/v1/oauth2/token`,
+      'grant_type=client_credentials',
+      {
+        auth: {
+          username: this.paypalConfig.clientId,
+          password: this.paypalConfig.clientSecret,
+        },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      },
+    );
+
+    return response.data.access_token;
   }
 
   async createOrder() {
@@ -25,7 +89,7 @@ export class PaypalService {
             value: '100.00',
           },
           payee: {
-            merchant_id: 'GGC7K5C5EP89Y',
+            email_address: 'sb-vssbu31273313@business.example.com',
           }
         },
       ],
@@ -50,4 +114,6 @@ export class PaypalService {
       throw new Error(error);
     }
   }
+
+  
 }

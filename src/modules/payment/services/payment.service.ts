@@ -12,6 +12,11 @@ export class PaymentService extends BaseService {
     super();
   }
 
+  async getAuthorizeUrl() {
+    const url = await this.paypalService.createPartnerReferral();
+    return url;
+  }
+
   async createPayment() {
     const order = await this.paypalService.createOrder();
     console.log('order', order)
