@@ -1,29 +1,31 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { BaseService } from 'src/modules/base/base.service';
 import { PaypalService } from './paypal.service';
+import { InstructorProfile } from 'src/entities/instructor-profile.entity';
 import { ExecutePaymentDto } from '../dto/execute-payment.dto';
+import { OnboardMerchantDto } from '../dto/onboard-merchant.dto';
 
 @Injectable()
 export class PaymentService extends BaseService {
   constructor(
-    private paypalService: PaypalService
+    private paypalService: PaypalService,
+    @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
   ) {
     super();
   }
 
-  async onboardMerchant() {
+  async onboardMerchant(body: OnboardMerchantDto, userId: number) {
+    const { paypalEmail } = body;
+    await this.instructorProfileRepo.update({ userId }, { paypalEmail });
     const partnerReferral = await this.paypalService.createPartnerReferral();
     const actionUrl = partnerReferral.links.find((referral) => referral.rel === 'action_url').href;
     return this.responseOk({ actionUrl });
   }
 
-  async addPaypalAccount() {
-    
-  }
-
   async createPayment() {
     const order = await this.paypalService.createOrder();
-    console.log('order', order)
     return this.responseOk({ orderId: order.id }); 
   }
 

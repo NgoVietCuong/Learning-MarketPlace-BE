@@ -34,10 +34,6 @@ export class PaypalService {
             },
           },
         ],
-        partner_config_override: {
-          return_url: 'https://4ce9-101-96-127-140.ngrok-free.app/',
-          action_renewal_url: 'https://4ce9-101-96-127-140.ngrok-free.app/',
-        },
         products: ['PPCP'],
         legal_consents: [
           {
@@ -87,7 +83,7 @@ export class PaypalService {
             value: '100.00',
           },
           payee: {
-            email_address: 'sb-vssbu31273313@business.example.com',
+            email_address: 'test-hlm4@business.example.com',
           }
         },
       ],
@@ -96,8 +92,8 @@ export class PaypalService {
     try {
       const order = await this.client.execute(request);
       return order.result;
-    } catch (error) {
-      throw new Error(error);
+    } catch (e) {
+      this.logger.error(e);
     }
   }
 
@@ -108,10 +104,8 @@ export class PaypalService {
     try {
       const capture = await this.client.execute(request);
       return capture.result;
-    } catch (error) {
-      throw new Error(error);
+    } catch (e) {
+      this.logger.error(e);
     }
-  }
-
-  
+  }  
 }
