@@ -3,7 +3,6 @@ import { BaseService } from 'src/modules/base/base.service';
 import { PaypalService } from './paypal.service';
 import { ExecutePaymentDto } from '../dto/execute-payment.dto';
 
-
 @Injectable()
 export class PaymentService extends BaseService {
   constructor(
@@ -12,9 +11,14 @@ export class PaymentService extends BaseService {
     super();
   }
 
-  async getAuthorizeUrl() {
-    const url = await this.paypalService.createPartnerReferral();
-    return url;
+  async onboardMerchant() {
+    const partnerReferral = await this.paypalService.createPartnerReferral();
+    const actionUrl = partnerReferral.links.find((referral) => referral.rel === 'action_url').href;
+    return this.responseOk({ actionUrl });
+  }
+
+  async addPaypalAccount() {
+    
   }
 
   async createPayment() {

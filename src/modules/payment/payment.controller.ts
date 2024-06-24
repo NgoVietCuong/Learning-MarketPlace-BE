@@ -5,20 +5,25 @@ import { Roles } from 'src/app/enums/common.enum';
 import { RoleGuard } from 'src/app/guards/role.guard';
 import { PaymentService } from './services/payment.service';
 import { ExecutePaymentDto } from './dto/execute-payment.dto';
-import { Public } from 'src/app/decorators/public';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
-@AllowAccess(Roles.STUDENT)
-@Public()
+@AllowAccess(Roles.INSTRUCTOR)
+@ApiTags('Payment')
 @Controller('payment')
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
 
-  @ApiOperation({ summary: 'Get authorize url'})
-  @Get('/authorize')
-  async getAuthorizeUrl() {
-    return this.paymentService.getAuthorizeUrl();
+  @ApiOperation({ summary: 'Paypal merchant onboarding' })
+  @Post('/onboard')
+  async onboardMerchant() {
+    return this.paymentService.onboardMerchant();
+  }
+
+  @ApiOperation({ summary: 'Add paypal account' })
+  @Post('/account')
+  async addPaypalAccount() {
+    return this.paymentService.addPaypalAccount();
   }
 
   @ApiOperation({ summary: 'Create payment' })

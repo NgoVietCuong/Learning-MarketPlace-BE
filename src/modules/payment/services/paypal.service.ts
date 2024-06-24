@@ -8,11 +8,10 @@ import paypalConfiguration from 'src/config/paypal.config';
 export class PaypalService {
   private readonly logger = new Logger(PaypalService.name);
   private client;
-  private environment;
 
   constructor(@Inject(paypalConfiguration.KEY) private paypalConfig: ConfigType<typeof paypalConfiguration>) {
-    this.environment = new paypal.core.SandboxEnvironment(paypalConfig.clientId, paypalConfig.clientSecret);
-    this.client = new paypal.core.PayPalHttpClient(this.environment);
+    const environment = new paypal.core.SandboxEnvironment(paypalConfig.clientId, paypalConfig.clientSecret);
+    this.client = new paypal.core.PayPalHttpClient(environment);
   }
 
   async createPartnerReferral() {
@@ -21,7 +20,6 @@ export class PaypalService {
     const response = await axios.post(
       `https://api-m.sandbox.paypal.com/v2/customer/partner-referrals`,
       {
-        // Payload for the partner referral request
         operations: [
           {
             operation: 'API_INTEGRATION',
@@ -37,8 +35,8 @@ export class PaypalService {
           },
         ],
         partner_config_override: {
-          return_url: 'https://youtube.com',
-          action_renewal_url: 'https://youtube.com',
+          return_url: 'https://4ce9-101-96-127-140.ngrok-free.app/',
+          action_renewal_url: 'https://4ce9-101-96-127-140.ngrok-free.app/',
         },
         products: ['PPCP'],
         legal_consents: [
