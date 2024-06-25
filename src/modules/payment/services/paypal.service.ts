@@ -1,5 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { I18nService } from 'nestjs-i18n';
 import axios from 'axios';
 import * as paypal from '@paypal/checkout-server-sdk';
 import paypalConfiguration from 'src/config/paypal.config';
@@ -9,7 +10,10 @@ export class PaypalService {
   private readonly logger = new Logger(PaypalService.name);
   private client;
 
-  constructor(@Inject(paypalConfiguration.KEY) private paypalConfig: ConfigType<typeof paypalConfiguration>) {
+  constructor(
+    private readonly trans: I18nService,
+    @Inject(paypalConfiguration.KEY) private paypalConfig: ConfigType<typeof paypalConfiguration>,
+  ) {
     const environment = new paypal.core.SandboxEnvironment(paypalConfig.clientId, paypalConfig.clientSecret);
     this.client = new paypal.core.PayPalHttpClient(environment);
   }
@@ -71,7 +75,7 @@ export class PaypalService {
     return response.data.access_token;
   }
 
-  async createOrder() {
+  async createOrder(payee: string, amount: number) {
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer('return=representation');
     request.requestBody({
@@ -80,11 +84,11 @@ export class PaypalService {
         {
           amount: {
             currency_code: 'USD',
-            value: '100.00',
+            value: ((amount * 104) / 100).toString(),
           },
           payee: {
-            email_address: 'test-hlm4@business.example.com',
-          }
+            email_address: payee,
+          },
         },
       ],
     });
@@ -107,5 +111,5 @@ export class PaypalService {
     } catch (e) {
       this.logger.error(e);
     }
-  }  
+  }
 }

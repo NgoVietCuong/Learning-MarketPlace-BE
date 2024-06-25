@@ -13,6 +13,7 @@ import { Exclude } from 'class-transformer';
 import { Role } from './role.entity';
 import { InstructorProfile } from './instructor-profile.entity';
 import { Enrollment } from './enrollment.entity';
+import { Payment } from './payment.entity';
 
 @Entity('users')
 export class User {
@@ -49,6 +50,9 @@ export class User {
 
   @OneToOne(() => InstructorProfile, (profile) => profile.user)
   profile: InstructorProfile;
+
+  @OneToMany(() => Payment, (payment) => payment.user)
+  payments: Payment[];
 
   @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({

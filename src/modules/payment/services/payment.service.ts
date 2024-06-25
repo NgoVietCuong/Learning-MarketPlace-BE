@@ -1,37 +1,114 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
+import { I18nService } from 'nestjs-i18n';
 import { BaseService } from 'src/modules/base/base.service';
 import { PaypalService } from './paypal.service';
+import { Course } from 'src/entities/course.entity';
+import { Payment } from 'src/entities/payment.entity';
+import { Enrollment } from 'src/entities/enrollment.entity';
 import { InstructorProfile } from 'src/entities/instructor-profile.entity';
+import { CreatePaymentDto } from '../dto/create-payment.dto';
 import { ExecutePaymentDto } from '../dto/execute-payment.dto';
 import { OnboardMerchantDto } from '../dto/onboard-merchant.dto';
+import { PaymentStatus } from 'src/app/enums/common.enum';
 
 @Injectable()
 export class PaymentService extends BaseService {
+  private readonly logger = new Logger(PaymentService.name);
+
   constructor(
+    private dataSource: DataSource,
     private paypalService: PaypalService,
-    @InjectRepository(InstructorProfile) private instructorProfileRepo: Repository<InstructorProfile>,
+    private readonly trans: I18nService,
+    @InjectRepository(Course) private courseRepo: Repository<Course>,
+    @InjectRepository(Payment) private paymentRepo: Repository<Payment>,
   ) {
     super();
   }
 
   async onboardMerchant(body: OnboardMerchantDto, userId: number) {
     const { paypalEmail } = body;
-    await this.instructorProfileRepo.update({ userId }, { paypalEmail });
-    const partnerReferral = await this.paypalService.createPartnerReferral();
-    const actionUrl = partnerReferral.links.find((referral) => referral.rel === 'action_url').href;
-    return this.responseOk({ actionUrl });
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.manager.update(InstructorProfile, { userId }, { paypalEmail });
+
+      const partnerReferral = await this.paypalService.createPartnerReferral();
+      const actionUrl = partnerReferral.links.find((referral) => referral.rel === 'action_url').href;
+      return this.responseOk({ actionUrl });
+    } catch (e) {
+      this.logger.error(e);
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'onboard merchant.' } }));
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  async createPayment() {
-    const order = await this.paypalService.createOrder();
-    return this.responseOk({ orderId: order.id }); 
+  async createPayment(body: CreatePaymentDto, userId: number) {
+    const { courseId } = body;
+    const course = await this.courseRepo.findOne({ where: { id: courseId }, relations: ['profile'] });
+
+    if (!course.price) throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'create payment. This course is free' } }));
+    if (!course.profile) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor Profile' } }));
+    if (!course.profile.paypalEmail) throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', {args: { action: 'create payment. This instructor is not onboarded with PayPal' }}));
+
+    const payment = await this.paymentRepo.findOneBy({ userId: userId, courseId: courseId });
+    if (payment && payment.status === PaymentStatus.COMPLETED) {
+      throw new BadRequestException('You have already purchased this course');
+    } else if (payment && payment.status === PaymentStatus.CREATED) {
+      return this.responseOk({ orderId: payment.paypalOrderId });
+    } 
+    
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const order = await this.paypalService.createOrder(course.profile.paypalEmail, course.price);
+      await queryRunner.manager.save(Payment, {
+        userId,
+        courseId,
+        amount: course.price,
+        paypalOrderId: order.id,
+        payee: course.profile.paypalEmail,
+        status: order.status,
+      });
+
+      await queryRunner.commitTransaction();
+      return this.responseOk({ orderId: order.id });
+    } catch (e) {
+      this.logger.error(e);
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'execute payment.' } }));
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  async executePayment(body: ExecutePaymentDto) {
+  async executePayment(body: ExecutePaymentDto, userId: number) {
     const { orderId } = body;
-    const order = await this.paypalService.captureOrder(orderId);
-    return this.responseOk({ order });
+    const payment = await this.paymentRepo.findOneBy({ paypalOrderId: orderId });
+    if (!payment) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Order' } }));
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const order = await this.paypalService.captureOrder(orderId);
+      await queryRunner.manager.update(Payment, { paypalOrderId: orderId }, { status: order.status });
+      await queryRunner.manager.save(Enrollment, { userId, courseId: payment.courseId });
+
+      await queryRunner.commitTransaction();
+      return this.responseOk();
+    } catch (e) {
+      this.logger.error(e);
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(this.trans.t('messages.BAD_REQUEST', { args: { action: 'execute payment.' } }));
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

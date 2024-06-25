@@ -14,6 +14,7 @@ import { InstructorProfile } from './instructor-profile.entity';
 import { Category } from './category.entity';
 import { Section } from './section.entity';
 import { Enrollment } from './enrollment.entity';
+import { Payment } from './payment.entity';
 
 @Entity('courses')
 export class Course {
@@ -61,6 +62,9 @@ export class Course {
 
   @OneToMany(() => Section, (section) => section.course)
   sections: Section[];
+
+  @OneToMany(() => Payment, (payment) => payment.course)
+  payments: Payment[];
 
   @ManyToOne(() => InstructorProfile, (profile) => profile.courses)
   @JoinColumn({ name: 'instructor_id' })
