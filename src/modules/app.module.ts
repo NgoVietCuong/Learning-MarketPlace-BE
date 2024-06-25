@@ -19,6 +19,7 @@ import { CategoryModule } from './category/category.module';
 import { CourseReviewModule } from './course-review/course-review.module';
 import { CourseExplorerModule } from './course-explorer/course-explorer.module';
 import { AdminModule } from './admin/admin.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { AdminModule } from './admin/admin.module';
     CourseReviewModule,
     CourseExplorerModule,
     AdminModule,
+    PaymentModule,
   ],
   providers: [
     {

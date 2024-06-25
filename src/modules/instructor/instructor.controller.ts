@@ -38,7 +38,7 @@ export class InstructorController {
   @Public()
   @ApiOperation({ summary: 'Get public instructor information' })
   @Get('profile/:slug')
-  async getInstructorInfo( @Param('slug') slug: string) {
+  async getInstructorInfo(@Param('slug') slug: string) {
     return this.instructorService.getInstructorInfo(slug);
   }
 }

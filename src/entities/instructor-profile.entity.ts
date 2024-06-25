@@ -43,6 +43,9 @@ export class InstructorProfile {
   @Column()
   youtubeLink: string;
 
+  @Column()
+  paypalEmail: string;
+
   @CreateDateColumn()
   createdAt: string;
 

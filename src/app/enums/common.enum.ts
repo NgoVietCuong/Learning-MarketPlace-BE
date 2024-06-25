@@ -20,7 +20,12 @@ export enum Roles {
   STUDENT = 'STUDENT',
 }
 
-export enum LessonContentType{
+export enum LessonContentType {
   VIDEO = 'Video',
   DOCUMENT = 'Document'
+}
+
+export enum PaymentStatus {
+  CREATED = 'CREATED',
+  COMPLETED = 'COMPLETED'
 }
