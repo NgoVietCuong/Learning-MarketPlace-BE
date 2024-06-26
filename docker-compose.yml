@@ -36,6 +36,19 @@ services:
       - 46503:6379
     networks:
       - hlm_network
+  metabase:
+    image: metabase/metabase:latest
+    container_name: hlm_metabase
+    restart: always
+    volumes:
+      - ./docker/metabase:/metabase
+      - ./docker/metabase-data:/metabase-data
+    ports:
+      - 46504:3000
+    depends_on:
+      - db
+    networks:
+      - hlm_network
 
 networks:
   hlm_network:
