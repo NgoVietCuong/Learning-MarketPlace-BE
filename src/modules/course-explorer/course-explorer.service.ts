@@ -176,9 +176,18 @@ export class CourseExplorerService extends BaseService {
       .createQueryBuilder('C')
       .where('C.id IN (:...courseIds)', { courseIds })
       .andWhere('C.isPublished = :isPublished', { isPublished: true })
-      .orderBy('C.updatedAt', 'DESC')
-      .select(['C', 'P.displayName', 'P.profilePicture']);
+      .getCount();
     
     return numberPublishedCourses;
+  }
+
+  async getNumberPaidCourses(courseIds: number[]) {
+    const numberPaidCourses = await this.courseRepo
+      .createQueryBuilder('C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .andWhere('C.price IS NOT NULL and C.price > :price', { price: 0 })
+      .getCount();
+
+    return numberPaidCourses;
   }
 }

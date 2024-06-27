@@ -107,9 +107,10 @@ export class InstructorService extends BaseService {
       throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor' } }));
 
     const courseIds = instructorProfile.courses.map((course) => course.id);
-    let totalStudents = 0, averageRating = '0.0', totalReviews = 0, totalIncome = 0, paymentList = [], incomeEachMonth = [];
+    let totalStudents = 0, averageRating = '0.0', totalReviews = 0, totalIncome = 0, paymentList = [], topIncomeCourses = [], incomeEachMonth = [];
     if (courseIds.length) {
       const numberOfPublishedCourses = await this.courseExplorerService.getNumberPublishedCourses(courseIds);
+      const numberOfPaidCourses = await this.courseExplorerService.getNumberPaidCourses(courseIds);
 
       const totalStudents = await this.enrollmentRepo
         .createQueryBuilder('E')
@@ -118,22 +119,25 @@ export class InstructorService extends BaseService {
         .getCount();
 
       const { totalReviews } = await this.courseReviewService.getTotalReviews(courseIds);
-      averageRating = await this.courseReviewService.getAverageRating(courseIds);
+      const averageRating = await this.courseReviewService.getAverageRating(courseIds);
       if (instructorProfile.paypalEmail) {
         paymentList = await this.paymentService.getPaymentToInstructor(instructorProfile.paypalEmail);
         totalIncome = await this.paymentService.getInstructorTotalIncome(instructorProfile.paypalEmail);
         incomeEachMonth = await this.paymentService.getInstructorIncomeEachMonth(instructorProfile.paypalEmail);
+        topIncomeCourses = await this.paymentService.getTopIncomeCourse(instructorProfile.paypalEmail);
       }
 
       return this.responseOk({
         totalStudents,
         totalReviews,
-        averageRating,
+        averageRating: averageRating.rating || '0.0',
         totalIncome,
         totalCourses: courseIds.length,
-        
+        numberOfPaidCourses,
+        numberOfPublishedCourses,
         paymentList,
         incomeEachMonth,
+        topIncomeCourses
       });
     }
 
@@ -143,8 +147,11 @@ export class InstructorService extends BaseService {
       averageRating,
       totalIncome,
       totalCourses: 0,
+      numberOfPaidCourses: 0,
+      numberOfPublishedCourses: 0,
       paymentList,
       incomeEachMonth,
+      topIncomeCourses
     });
   }
 }

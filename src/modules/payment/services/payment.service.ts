@@ -122,19 +122,20 @@ export class PaymentService extends BaseService {
   }
 
   async getInstructorTotalIncome(paypalEmail: string) {
-    const totalIncome = await this.paymentRepo
+    const totalIncomeResult = await this.paymentRepo
       .createQueryBuilder('P')
       .where('P.payee = :payee', { payee: paypalEmail })
       .andWhere('P.status = :status', { status: PaymentStatus.COMPLETED })
       .select('SUM(P.amount)', 'totalIncome')
       .getRawOne();
 
-    return totalIncome;
+    return totalIncomeResult.totalIncome;
   }
 
   async getPaymentToInstructor(paypalEmail: string) {
     const paymentList = await this.paymentRepo
       .createQueryBuilder('P')
+      .innerJoinAndSelect('P.course', 'C')
       .where('P.payee = :payee', { payee: paypalEmail })
       .andWhere('P.status = :status', { status: PaymentStatus.COMPLETED })
       .getMany();
@@ -153,12 +154,11 @@ export class PaymentService extends BaseService {
       .andWhere('P.updatedAt >= :sixMonthsAgo', { sixMonthsAgo })
       .groupBy("date_trunc('month', P.updatedAt)")
       .select("TO_CHAR(date_trunc('month', P.updatedAt), 'MM-YYYY') as month")
-      .addSelect('SUM(P.amount) as total')
+      .addSelect('SUM(P.amount) as income')
       .orderBy('month', 'ASC')
       .getRawMany();
 
     const incomeEachMonth = [];
-    
     for (let i = 5; i >= 0; i--) {
       const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthString = `${('0' + (month.getMonth() + 1)).slice(-2)}-${month.getFullYear()}`;
@@ -166,10 +166,24 @@ export class PaymentService extends BaseService {
 
       incomeEachMonth.push({
         month: monthString,
-        total: data ? data.total : 0,
+        income: data ? data.income : 0,
       })
     }
-    console.log(incomeEachMonth)
+
     return incomeEachMonth;
+  }
+
+  async getTopIncomeCourse(paypalEmail: string) {
+    const topIncomeCourses = await this.paymentRepo
+      .createQueryBuilder('P')
+      .innerJoin('P.course', 'C')
+      .where('P.payee = :payee', { payee: paypalEmail })
+      .andWhere('P.status = :status', { status: PaymentStatus.COMPLETED })
+      .groupBy('C.id')
+      .select(['C.id as id', 'C.title as title', 'SUM(P.amount) as amount'])
+      .orderBy('amount', 'DESC')
+      .getRawMany()
+
+    return topIncomeCourses;
   }
 }
