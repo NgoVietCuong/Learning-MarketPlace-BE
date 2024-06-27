@@ -17,5 +17,6 @@ import paypalConfiguration from 'src/config/paypal.config';
   ],
   controllers: [PaymentController],
   providers: [PaymentService, PaypalService],
+  exports: [PaymentService],
 })
 export class PaymentModule {}

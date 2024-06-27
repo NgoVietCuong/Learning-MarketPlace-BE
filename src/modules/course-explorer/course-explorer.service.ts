@@ -170,4 +170,24 @@ export class CourseExplorerService extends BaseService {
     
     return numberArticles;
   }
+
+  async getNumberPublishedCourses(courseIds: number[]) {
+    const numberPublishedCourses = await this.courseRepo
+      .createQueryBuilder('C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .getCount();
+    
+    return numberPublishedCourses;
+  }
+
+  async getNumberPaidCourses(courseIds: number[]) {
+    const numberPaidCourses = await this.courseRepo
+      .createQueryBuilder('C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .andWhere('C.price IS NOT NULL and C.price > :price', { price: 0 })
+      .getCount();
+
+    return numberPaidCourses;
+  }
 }
