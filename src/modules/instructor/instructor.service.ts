@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { I18nService } from 'nestjs-i18n';
 import { BaseService } from '../base/base.service';
+import { PaymentService } from '../payment/services/payment.service';
 import { CourseReviewService } from '../course-review/course-review.service';
 import { CourseExplorerService } from '../course-explorer/course-explorer.service';
 import { Enrollment } from 'src/entities/enrollment.entity';
@@ -14,6 +15,7 @@ import { ChangeInstructorProfileDto } from './dto/change-instructor-profile.dto'
 export class InstructorService extends BaseService {
   constructor(
     private readonly trans: I18nService,
+    private paymentService: PaymentService,
     private courseReviewService: CourseReviewService,
     private courseExplorerService: CourseExplorerService,
     @InjectRepository(Enrollment) private enrollmentRepo: Repository<Enrollment>,
@@ -55,7 +57,9 @@ export class InstructorService extends BaseService {
     const courses = profile.courses;
     const courseIds = courses.map((course) => course.id);
 
-    let totalStudents = 0, averageRating = 0, totalReviews = 0;
+    let totalStudents = 0,
+      averageRating = '0.0',
+      totalReviews = 0;
     if (courseIds.length) {
       const totalStudents = await this.enrollmentRepo
         .createQueryBuilder('E')
@@ -82,16 +86,65 @@ export class InstructorService extends BaseService {
         }
 
         course['totalVideoDuration'] = totalVideoDuration;
-        course['totalArticles'] = Number(numberArticles.find((item) => item.courseId === course.id)?.totalArticles) || 0;
-        course['totalReviews'] = Number(totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews) || 0;
+        course['totalArticles'] =
+          Number(numberArticles.find((item) => item.courseId === course.id)?.totalArticles) || 0;
+        course['totalReviews'] =
+          Number(totalReviewsEachCourse.find((item) => item.courseId === course.id)?.totalReviews) || 0;
         course['averageRating'] = averageRatingEachCourse.find((item) => item.courseId === course.id)?.rating || '0.0';
-        
+
         return course;
       });
 
-      return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: averageRating.rating || '0.0' })
+      return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating: averageRating.rating || '0.0' });
     }
 
     return this.responseOk({ ...profile, totalStudents, totalReviews, averageRating });
+  }
+
+  async getInstructorDashboard(userId: number) {
+    const instructorProfile = await this.instructorProfileRepo.findOne({ where: { userId }, relations: ['courses'] });
+    if (!instructorProfile)
+      throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'Instructor' } }));
+
+    const courseIds = instructorProfile.courses.map((course) => course.id);
+    let totalStudents = 0, averageRating = '0.0', totalReviews = 0, totalIncome = 0, paymentList = [], incomeEachMonth = [];
+    if (courseIds.length) {
+      const numberOfPublishedCourses = await this.courseExplorerService.getNumberPublishedCourses(courseIds);
+
+      const totalStudents = await this.enrollmentRepo
+        .createQueryBuilder('E')
+        .leftJoin('E.course', 'C')
+        .where('C.id IN (:...courseIds)', { courseIds })
+        .getCount();
+
+      const { totalReviews } = await this.courseReviewService.getTotalReviews(courseIds);
+      averageRating = await this.courseReviewService.getAverageRating(courseIds);
+      if (instructorProfile.paypalEmail) {
+        paymentList = await this.paymentService.getPaymentToInstructor(instructorProfile.paypalEmail);
+        totalIncome = await this.paymentService.getInstructorTotalIncome(instructorProfile.paypalEmail);
+        incomeEachMonth = await this.paymentService.getInstructorIncomeEachMonth(instructorProfile.paypalEmail);
+      }
+
+      return this.responseOk({
+        totalStudents,
+        totalReviews,
+        averageRating,
+        totalIncome,
+        totalCourses: courseIds.length,
+        
+        paymentList,
+        incomeEachMonth,
+      });
+    }
+
+    return this.responseOk({
+      totalStudents,
+      totalReviews,
+      averageRating,
+      totalIncome,
+      totalCourses: 0,
+      paymentList,
+      incomeEachMonth,
+    });
   }
 }

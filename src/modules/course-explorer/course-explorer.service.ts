@@ -170,4 +170,15 @@ export class CourseExplorerService extends BaseService {
     
     return numberArticles;
   }
+
+  async getNumberPublishedCourses(courseIds: number[]) {
+    const numberPublishedCourses = await this.courseRepo
+      .createQueryBuilder('C')
+      .where('C.id IN (:...courseIds)', { courseIds })
+      .andWhere('C.isPublished = :isPublished', { isPublished: true })
+      .orderBy('C.updatedAt', 'DESC')
+      .select(['C', 'P.displayName', 'P.profilePicture']);
+    
+    return numberPublishedCourses;
+  }
 }

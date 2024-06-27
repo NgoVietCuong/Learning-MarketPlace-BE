@@ -34,6 +34,12 @@ export class InstructorController {
   async changeInstructorPicture(@Body() body:ChangeInstructorPictureDto, @User('id') id: number) {
     return this.instructorService.changeInstructorPicture(body, id);
   }
+
+  @ApiOperation({ summary: 'Get instructor dashboard' })
+  @Get('dashboard')
+  async getInstructorDashboard(@User('id') id: number) {
+    return this.instructorService.getInstructorDashboard(id);
+  }
   
   @Public()
   @ApiOperation({ summary: 'Get public instructor information' })
