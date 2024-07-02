@@ -101,13 +101,19 @@ export class InstructorCourseService extends BaseService {
   }
 
   async getListCourses(query: ListCoursesDto, userId: number) {
-    const { page, limit, search, categoryId } = query;
+    const { page, type, status, limit, search, categoryId } = query;
     const queryBuilder = this.courseRepo
       .createQueryBuilder('C')
       .innerJoin('C.profile', 'P')
       .leftJoinAndSelect('C.categories', 'CTG')
       .where('P.userId = :userId', { userId });
 
+    if (type === 'Free') queryBuilder.andWhere('C.price = :price', { price: 0 });
+    else if (type === 'Paid') queryBuilder.andWhere('C.price > :price', { price: 0 });
+    
+    if (status === 'Published') queryBuilder.andWhere('C.isPublished = :isPublished', { isPublished: true });
+    else if (status === 'Unpublished') queryBuilder.andWhere('C.isPublished = :isPublished', { isPublished: false });
+    
     if (categoryId) queryBuilder.andWhere('CTG.id = :categoryId', { categoryId: categoryId });
     if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` });
     queryBuilder.orderBy('C.createdAt', 'DESC');
