@@ -1,8 +1,14 @@
 
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { PaginationDtoConstant } from 'src/app/constants/pagination-dto.constant';
+
+const optionalBooleanMapper = new Map([
+  ['undefined', undefined],
+  ['true', true],
+  ['false', false],
+]);
 
 export class ListUsersDto extends PaginationDtoConstant {
   @ApiPropertyOptional()
@@ -13,11 +19,11 @@ export class ListUsersDto extends PaginationDtoConstant {
   @ApiPropertyOptional()
   @IsBoolean()
   @IsOptional()
+  @Transform(({value}) => optionalBooleanMapper.get(value))
   isActive: string;
 
   @ApiPropertyOptional()
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  @Type(() => Number)
-  roleId: number;
+  role: string;
 }
