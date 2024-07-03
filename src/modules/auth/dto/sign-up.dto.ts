@@ -4,7 +4,6 @@ import { IsEmail, IsNotEmpty, IsString, NotContains } from 'class-validator';
 export class SignUpDto {
   @IsString()
   @IsNotEmpty()
-  @NotContains(' ')
   username: string;
 
   @IsEmail()

@@ -1,7 +1,7 @@
 import { I18nService } from 'nestjs-i18n';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, DataSource, MoreThan } from 'typeorm';
+import { Repository, In, DataSource, MoreThan, Brackets } from 'typeorm';
 import { BaseService } from '../base/base.service';
 import { Course } from 'src/entities/course.entity';
 import { Lesson } from 'src/entities/lesson.entity';
@@ -108,12 +108,17 @@ export class InstructorCourseService extends BaseService {
       .leftJoinAndSelect('C.categories', 'CTG')
       .where('P.userId = :userId', { userId });
 
-    if (type === 'Free') queryBuilder.andWhere('C.price = :price', { price: 0 });
+    if (type === 'Free')
+      queryBuilder.andWhere(
+        new Brackets((qb) => {
+          qb.where('C.price = 0').orWhere('C.price IS NULL');
+        }),
+      );
     else if (type === 'Paid') queryBuilder.andWhere('C.price > :price', { price: 0 });
-    
+
     if (status === 'Published') queryBuilder.andWhere('C.isPublished = :isPublished', { isPublished: true });
     else if (status === 'Unpublished') queryBuilder.andWhere('C.isPublished = :isPublished', { isPublished: false });
-    
+
     if (categoryId) queryBuilder.andWhere('CTG.id = :categoryId', { categoryId: categoryId });
     if (search) queryBuilder.andWhere(this.searchCaseInsensitive('C.title'), { keyword: `%${search}%` });
     queryBuilder.orderBy('C.createdAt', 'DESC');

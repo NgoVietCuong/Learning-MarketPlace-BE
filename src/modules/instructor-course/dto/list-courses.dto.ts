@@ -25,6 +25,6 @@ export class ListCoursesDto extends PaginationDtoConstant {
   @IsNumber()
   @IsOptional()
   @Validate(Exist, [Category])
-  // @Type(() => Number)
+  @Type(() => Number)
   categoryId: number;
 }
