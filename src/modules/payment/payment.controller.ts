@@ -11,24 +11,26 @@ import { OnboardMerchantDto } from './dto/onboard-merchant.dto';
 
 @ApiBearerAuth()
 @UseGuards(RoleGuard)
-@AllowAccess(Roles.INSTRUCTOR)
 @ApiTags('Payment')
 @Controller('payment')
 export class PaymentController {
   constructor(private paymentService: PaymentService) {}
 
+  @AllowAccess(Roles.INSTRUCTOR)
   @ApiOperation({ summary: 'Paypal merchant onboarding' })
   @Post('/onboard')
   async onboardMerchant(@Body() body: OnboardMerchantDto, @User('id') id: number) {
     return this.paymentService.onboardMerchant(body, id);
   }
 
+  @AllowAccess(Roles.STUDENT)
   @ApiOperation({ summary: 'Create payment' })
   @Post('/create')
   async createPayment(@Body() body: CreatePaymentDto, @User('id') id: number) {
     return this.paymentService.createPayment(body, id);
   }
 
+  @AllowAccess(Roles.STUDENT)
   @ApiOperation({ summary: 'Execute payment' })
   @Post('/execute')
   async executePayment(@Body() body: ExecutePaymentDto, @User('id') id: number) {
