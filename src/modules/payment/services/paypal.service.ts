@@ -84,7 +84,7 @@ export class PaypalService {
         {
           amount: {
             currency_code: 'USD',
-            value: ((amount * 104) / 100).toString(),
+            value: ((amount + 0.49) / (1 - 0.0349)).toFixed(2),
           },
           payee: {
             email_address: payee,

@@ -72,7 +72,6 @@ export class UserService extends BaseService {
       .createQueryBuilder('U')
       .leftJoinAndSelect('U.roles', 'R')
       .where('R.code <> :code', { code: Roles.ADMIN });
-    console.log('role', role)
       
     if (role) queryBuilder.andWhere('R.code = :role', { role });
     if (isActive !== undefined) queryBuilder.andWhere('U.isActive = :isActive', { isActive });
