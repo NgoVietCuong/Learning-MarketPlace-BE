@@ -59,8 +59,8 @@ export class LearningService extends BaseService {
     let lessonProgress = await this.lessonProgressRepo.findOneBy({ enrollmentId, lessonId });
     const totalLessons = await this.lessonRepo
       .createQueryBuilder('L')
-      .leftJoin('L.section', 'S')
-      .leftJoin('S.course', 'C')
+      .innerJoin('L.section', 'S')
+      .innerJoin('S.course', 'C')
       .innerJoin('C.enrollments', 'E')
       .where('E.id = :id', { id: enrollmentId })
       .where('L.isPublished = :isPublished', { isPublished: true })
@@ -88,6 +88,7 @@ export class LearningService extends BaseService {
       });
       const [data, completedLessons] = totalCompletedLessons;
       const progressStatus = Math.round((completedLessons / totalLessons) * 100);
+      console.log(totalLessons, progressStatus, completedLessons)
       await queryRunner.manager.update(Enrollment, { id: enrollmentId }, { progressStatus });
 
       await queryRunner.commitTransaction();

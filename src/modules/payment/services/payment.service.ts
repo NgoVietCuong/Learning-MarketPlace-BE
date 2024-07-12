@@ -38,6 +38,7 @@ export class PaymentService extends BaseService {
 
       const partnerReferral = await this.paypalService.createPartnerReferral();
       const actionUrl = partnerReferral.links.find((referral) => referral.rel === 'action_url').href;
+       await queryRunner.commitTransaction()
       return this.responseOk({ actionUrl });
     } catch (e) {
       this.logger.error(e);
