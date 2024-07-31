@@ -25,6 +25,8 @@ install:
 # Start program in node container
 dev:
 	docker compose exec node yarn start:dev
+start:
+	docker compose exec node yarn start:prod
 # Compile nestjs code in node container into an output folder
 buildNest:
 	docker compose exec node yarn build
