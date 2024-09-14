@@ -91,7 +91,6 @@ export class AuthService extends BaseService {
   }
 
   async resendVerifyEmail(body: ResendVerifyEmailDto) {
-    console.log('test')
     const { email } = body;
     const user = await this.userService.findOne(email);
     if (!user) throw new NotFoundException(this.trans.t('messages.NOT_FOUND', { args: { object: 'User' } }));
